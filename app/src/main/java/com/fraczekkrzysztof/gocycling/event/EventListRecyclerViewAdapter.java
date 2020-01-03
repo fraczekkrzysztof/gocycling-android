@@ -5,11 +5,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
@@ -49,7 +49,8 @@ public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventList
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.text.setText(DateUtils.sdfWithoutTime.format( mEventList.get(position).getDateAndTime()) + " " +mEventList.get(position).getName());
+        holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
+        holder.textTitle.setText(mEventList.get(position).getName());
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,12 +68,14 @@ public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventList
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
-        TextView text;
-        RelativeLayout parentLayout;
+        TextView textDate;
+        TextView textTitle;
+        ConstraintLayout parentLayout;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            text = itemView.findViewById(R.id.event_text);
-            parentLayout = itemView.findViewById(R.id.parent_layout);
+            textDate = itemView.findViewById(R.id.event_list_time);
+            textTitle = itemView.findViewById(R.id.event_list_title);
+            parentLayout = itemView.findViewById(R.id.single_row_event_layout);
         }
     }
 }

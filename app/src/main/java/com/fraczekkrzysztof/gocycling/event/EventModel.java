@@ -5,11 +5,8 @@ import android.util.Log;
 import com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -55,7 +52,7 @@ public class EventModel {
                 EventModel eventModel = new EventModel();
                 eventModel.setName(eventObject.getString("name"));
                 eventModel.setPlace(eventObject.getString("place"));
-                eventModel.setDateAndTime(DateUtils.sdfWithTime.parse(eventObject.getString("dateAndTime")));
+                eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
                 eventList.add(eventModel);
             }
         } catch (Exception e) {
