@@ -13,29 +13,35 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils.DateUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventListRecyclerViewAdapter.ViewHolder>{
 
     private static final String TAG = "EventListRVAdapter";
 
-    private List<EventModel> mEventList;
+    private List<EventModel> mEventList = new ArrayList<>();
     private Context mContext;
 
-    public void setEventList(List<EventModel> eventList) {
-        mEventList = eventList;
+    public void addEvents(List<EventModel> eventList) {
+        mEventList.addAll(eventList);
+        notifyDataSetChanged();
     }
 
-    public EventListRecyclerViewAdapter(Context context, List<EventModel> eventList) {
-        mEventList = eventList;
+    public void clearEvents(){
+        mEventList.clear();
+    }
+
+    public EventListRecyclerViewAdapter(Context context) {
         mContext = context;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_listitem,parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_list_item,parent,false);
         ViewHolder holder = new ViewHolder(view);
         return holder;
     }
@@ -43,7 +49,7 @@ public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventList
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.text.setText(mEventList.get(position).getName());
+        holder.text.setText(DateUtils.sdfWithoutTime.format( mEventList.get(position).getDateAndTime()) + " " +mEventList.get(position).getName());
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override

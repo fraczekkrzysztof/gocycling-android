@@ -2,6 +2,8 @@ package com.fraczekkrzysztof.gocycling.event;
 
 import android.util.Log;
 
+import com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils.DateUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,8 +46,8 @@ public class EventModel {
     }
 
     public static List<EventModel> fromJson(JSONObject jsonObject) {
+        Log.d(TAG, "fromJson: parsing response for receiving list of events");
         List<EventModel> eventList = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         try{
             JSONArray eventArray = jsonObject.getJSONObject("_embedded").getJSONArray("events");
             for (int i = 0; i < eventArray.length(); i++) {
@@ -53,14 +55,25 @@ public class EventModel {
                 EventModel eventModel = new EventModel();
                 eventModel.setName(eventObject.getString("name"));
                 eventModel.setPlace(eventObject.getString("place"));
-                eventModel.setDateAndTime(sdf.parse(eventObject.getString("dateAndTime")));
+                eventModel.setDateAndTime(DateUtils.sdfWithTime.parse(eventObject.getString("dateAndTime")));
                 eventList.add(eventModel);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "fromJson: size of list " + eventList.size() );
         return eventList;
 
+    }
+
+    public static int getTotalPageFromJson(JSONObject jsonObject){
+        int totalPage = 0;
+        try{
+            totalPage = jsonObject.getJSONObject("page").getInt("totalPages");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "fromJson: total number of pages " + totalPage );
+        return totalPage;
     }
 }
