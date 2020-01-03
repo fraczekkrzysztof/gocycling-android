@@ -1,6 +1,7 @@
 package com.fraczekkrzysztof.gocycling.event;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +14,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +58,9 @@ public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventList
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
-                Toast.makeText(mContext, mEventList.get(position).getName(),Toast.LENGTH_SHORT).show();
+                Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
+                newCityIntent.putExtra("Event",mEventList.get(position));
+                mContext.startActivity(newCityIntent);
             }
         });
     }

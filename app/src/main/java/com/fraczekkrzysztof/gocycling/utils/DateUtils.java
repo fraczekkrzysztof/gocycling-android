@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils;
+package com.fraczekkrzysztof.gocycling.utils;
 
 import java.text.SimpleDateFormat;
 

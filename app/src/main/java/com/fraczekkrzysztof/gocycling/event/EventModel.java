@@ -2,18 +2,19 @@ package com.fraczekkrzysztof.gocycling.event;
 
 import android.util.Log;
 
-import com.fraczekkrzysztof.gocycling.co.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static android.content.ContentValues.TAG;
 
-public class EventModel {
+public class EventModel implements Serializable {
     private String name;
     private String place;
     private Date dateAndTime;
