@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling;
+package com.fraczekkrzysztof.gocycling.event;
 
 import android.content.Context;
 import android.util.Log;
@@ -12,16 +12,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.fraczekkrzysztof.gocycling.event.EventModel;
+import com.fraczekkrzysztof.gocycling.R;
 
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>{
+public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventListRecyclerViewAdapter.ViewHolder>{
 
-    private static final String TAG = "RecyclerViewAdapter";
+    private static final String TAG = "EventListRVAdapter";
 
     private List<EventModel> mEventList;
     private Context mContext;
@@ -30,7 +27,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         mEventList = eventList;
     }
 
-    public RecyclerViewAdapter(Context context, List<EventModel> eventList) {
+    public EventListRecyclerViewAdapter(Context context, List<EventModel> eventList) {
         mEventList = eventList;
         mContext = context;
     }

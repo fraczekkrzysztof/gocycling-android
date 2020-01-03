@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling;
+package com.fraczekkrzysztof.gocycling.event;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -7,10 +7,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.fraczekkrzysztof.gocycling.event.EventModel;
+import com.fraczekkrzysztof.gocycling.R;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.SyncHttpClient;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,15 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.client.HttpClient;
 
-public class MainActivity extends AppCompatActivity {
+public class EventListActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "EventListActivity";
 
     private List<EventModel> mListEvents = new ArrayList<>();
     RecyclerView recyclerView;
-    RecyclerViewAdapter adapter;
+    EventListRecyclerViewAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "initRecyclerView: init recycler view");
         Log.d(TAG, "initRecyclerView: " + eventModelList.size());
         recyclerView = findViewById(R.id.recycler_view);
-        adapter = new RecyclerViewAdapter(getApplicationContext(),eventModelList);
+        adapter = new EventListRecyclerViewAdapter(getApplicationContext(),eventModelList);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
