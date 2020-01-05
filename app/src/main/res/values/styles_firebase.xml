@@ -1,0 +1,13 @@
+<resources>
+    <style name="FirebaseUI" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Required for sign-in flow styling -->
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryLightColor</item>
+        <item name="colorAccent">@color/primaryDarkColor</item>
+
+        <item name="colorControlNormal">@color/primaryLightColor</item>
+        <item name="colorControlActivated">@color/primaryDarkColor</item>
+        <item name="colorControlHighlight">@color/secondaryDarkColor</item>
+<!--        <item name="android:windowBackground">@color/material_green_50</item>-->
+    </style>
+</resources>
