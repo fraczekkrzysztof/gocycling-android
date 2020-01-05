@@ -108,7 +108,7 @@ public class EventListActivity extends AppCompatActivity {
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
 
-            if(islastItemDisplaying(recyclerView)){
+            if(isLastItemDisplaying(recyclerView)){
                 if (page == totalPages - 1){
                     Log.d(TAG, "There is nothing to load");
                     return;
@@ -121,7 +121,7 @@ public class EventListActivity extends AppCompatActivity {
 
 
     };
-    private boolean islastItemDisplaying(RecyclerView recyclerView){
+    private boolean isLastItemDisplaying(RecyclerView recyclerView){
         //check if the adapter item count is greater than 0
         if(recyclerView.getAdapter().getItemCount() != 0){
             //get the last visible item on screen using the layoutmanager
