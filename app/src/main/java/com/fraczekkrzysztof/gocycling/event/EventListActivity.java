@@ -1,6 +1,10 @@
 package com.fraczekkrzysztof.gocycling.event;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,6 +36,7 @@ public class EventListActivity extends AppCompatActivity {
     private EventListRecyclerViewAdapter mAdapter;
     private ProgressBar mProgressBar;
     private SwipeRefreshLayout eventListSwipe;
+    private DrawerLayout mDrawerLayout;
     private int page = 0;
     private int totalPages = 0;
 
@@ -43,11 +48,28 @@ public class EventListActivity extends AppCompatActivity {
         mProgressBar.setVisibility(View.INVISIBLE);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
+
+        Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
+        setSupportActionBar(mToolbar);
+        mDrawerLayout = findViewById(R.id.event_list_layout);
+        ActionBarDrawerToggle toogle = new ActionBarDrawerToggle(this,mDrawerLayout,mToolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(toogle);
+        toogle.syncState();
+
         getEvents(0);
         initRecyclerView();
         Log.d(TAG, "onCreate:  started.");
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+
+    }
 
     private void initRecyclerView(){
         Log.d(TAG, "initRecyclerView: init recycler view");

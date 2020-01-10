@@ -31,7 +31,8 @@ public class LoggingActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferences pref = getApplicationContext().getSharedPreferences(sharedPreferencesString,MODE_PRIVATE);
-        if (pref.getString(sharedPreferencesLoggedUserString,null) != null){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null){
             Log.d(TAG, "onCreate: user already logged in. Redirect to EventListActivity");
             startApp();
         } else {
