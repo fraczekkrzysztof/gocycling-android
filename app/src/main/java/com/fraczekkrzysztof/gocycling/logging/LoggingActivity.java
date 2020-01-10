@@ -30,7 +30,6 @@ public class LoggingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences pref = getApplicationContext().getSharedPreferences(sharedPreferencesString,MODE_PRIVATE);
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null){
             Log.d(TAG, "onCreate: user already logged in. Redirect to EventListActivity");
@@ -73,10 +72,6 @@ public class LoggingActivity extends AppCompatActivity {
             if (resultCode ==RESULT_OK){
 
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                SharedPreferences pref = getApplicationContext().getSharedPreferences(sharedPreferencesString,MODE_PRIVATE);
-                SharedPreferences.Editor editor = pref.edit();
-                editor.putString(sharedPreferencesLoggedUserString,user.getUid());
-                editor.commit();
                 Log.d(TAG, "onActivityResult: user successfully logged in " + user.getUid());
                 Toast.makeText(getApplicationContext(),"Successfully logged in!",Toast.LENGTH_SHORT).show();
                 startApp();
