@@ -18,6 +18,7 @@ public class EventModel implements Serializable {
     private String name;
     private String place;
     private Date dateAndTime;
+    private long id;
 
     public String getName() {
         return name;
@@ -43,6 +44,14 @@ public class EventModel implements Serializable {
         this.dateAndTime = dateAndTime;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public static List<EventModel> fromJson(JSONObject jsonObject) {
         Log.d(TAG, "fromJson: parsing response for receiving list of events");
         List<EventModel> eventList = new ArrayList<>();
@@ -51,6 +60,7 @@ public class EventModel implements Serializable {
             for (int i = 0; i < eventArray.length(); i++) {
                 JSONObject eventObject = eventArray.getJSONObject(i);
                 EventModel eventModel = new EventModel();
+                eventModel.setId(eventObject.getLong("id"));
                 eventModel.setName(eventObject.getString("name"));
                 eventModel.setPlace(eventObject.getString("place"));
                 eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
