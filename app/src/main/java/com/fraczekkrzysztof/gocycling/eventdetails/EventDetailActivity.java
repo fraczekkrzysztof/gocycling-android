@@ -1,5 +1,6 @@
 package com.fraczekkrzysztof.gocycling.eventdetails;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventModel;
+import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
@@ -70,12 +72,13 @@ public class EventDetailActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         Log.d(TAG, "onSuccess: Successfully add confirmtion");
-                        //TODO create new Intent
+                        Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
+                        startActivity(intent);
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.e(TAG, "onFailure: ",error );
+                        Log.e(TAG, "onFailure: " + responseBody.toString(),error  );
                         Toast.makeText(getApplicationContext(),"Error while confirmed!",Toast.LENGTH_SHORT).show();
                     }
                 });

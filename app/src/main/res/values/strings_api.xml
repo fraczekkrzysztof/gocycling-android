@@ -2,5 +2,6 @@
 <resources>
     <string name="api_base_address">http://10.0.2.2:8080/</string>
     <string name="api_event_address">api/events</string>
+    <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_confirmation_address">api/confirmations</string>
 </resources>

@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".myconfirmations.MyConfirmations"></activity>
+        <activity android:name=".myconfirmations.MyConfirmationsLists"></activity>
         <activity android:name=".logging.LoggingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

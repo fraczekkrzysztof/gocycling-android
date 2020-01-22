@@ -25,6 +25,7 @@ import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
+import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -37,7 +38,6 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import javax.security.auth.login.LoginException;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -202,9 +202,14 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                                 }
                             }
                         });
-
                 break;
+            case R.id.my_confirmation_menu:
+                Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
+                startActivity(intent);
+                break;
+
         }
+        menuItem.setChecked(false);
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
