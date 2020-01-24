@@ -33,7 +33,7 @@ public class MyConfirmationsLists extends AppCompatActivity {
     private static final String TAG = "MyConfirmationsLists";
     private RecyclerView mRecyclerView;
     //will use the same adapter as event List
-    private EventListRecyclerViewAdapter mAdapter;
+    private MyConfirmationListRecyclerViewAdapter mAdapter;
     private ProgressBar mProgressBar;
     private SwipeRefreshLayout mConfirmationListSwype;
     private int page = 0;
@@ -55,7 +55,7 @@ public class MyConfirmationsLists extends AppCompatActivity {
     private void initRecyclerView(){
         Log.d(TAG, "initRecyclerView: init recycler view");
         mRecyclerView = findViewById(R.id.my_confirmation_recycler_view);
-        mAdapter = new EventListRecyclerViewAdapter(getApplicationContext());
+        mAdapter = new MyConfirmationListRecyclerViewAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setOnScrollListener(prOnScrollListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -71,7 +71,7 @@ public class MyConfirmationsLists extends AppCompatActivity {
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_confirmed);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_created", SortTypes.DESC);
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "getEvents: created request" + requestAddress);
         mProgressBar.setVisibility(View.VISIBLE);
         client.get(requestAddress, new JsonHttpResponseHandler(){
