@@ -6,6 +6,8 @@ public class ApiUtils {
     public static final String PARAMS_AND = "&";
     private static final String PAGE = "page=";
     private static final String SORT = "sort=";
+    public static final String USER_UID = "userUid=";
+    public static final String EventId = "eventId=";
 
     public static String getPageToRequest(){
         return getPageToRequest(0);
