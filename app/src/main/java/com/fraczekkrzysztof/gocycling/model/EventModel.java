@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling.event;
+package com.fraczekkrzysztof.gocycling.model;
 
 import android.util.Log;
 
@@ -15,6 +15,7 @@ import java.util.List;
 import static android.content.ContentValues.TAG;
 
 public class EventModel implements Serializable {
+    private static final String TAG = "EventModel";
     private String name;
     private String place;
     private Date dateAndTime;

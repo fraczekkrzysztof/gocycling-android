@@ -14,12 +14,10 @@ import android.widget.ProgressBar;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
-import com.fraczekkrzysztof.gocycling.event.EventListRecyclerViewAdapter;
-import com.fraczekkrzysztof.gocycling.event.EventModel;
+import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

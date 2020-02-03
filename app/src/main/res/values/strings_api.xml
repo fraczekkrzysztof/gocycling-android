@@ -5,4 +5,5 @@
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_confirmation_address">api/confirmations</string>
     <string name="api_delete_confirmation">api/custom/confirmations/deleteByUserUidAndEventId</string>
+    <string name="api_find_confirmation_by_user_and_event">api/confirmations/search/findByUserUidAndEventId</string>
 </resources>
