@@ -133,7 +133,7 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
         Log.d(TAG, "deleteConfirmation: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
-        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_delete_confirmation);
+        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_delete_confirmation_by_user_event);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.USER_UID + userUid;
         requestAddress = requestAddress + ApiUtils.PARAMS_AND  + ApiUtils.EventId + event.getId();
         Log.d(TAG, "deleteConfirmation: created request " + requestAddress);

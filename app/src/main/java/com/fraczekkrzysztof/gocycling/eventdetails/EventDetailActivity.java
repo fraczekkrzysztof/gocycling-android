@@ -33,6 +33,7 @@ import cz.msebera.android.httpclient.entity.StringEntity;
 public class EventDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "EventDetailActivity";
+    private long confirmationId = -1;
     TextView mTitle;
     TextView mWhere;
     TextView mWhen;
@@ -53,6 +54,21 @@ public class EventDetailActivity extends AppCompatActivity {
         setTexts();
     }
 
+    private void setConfirmationButton(boolean isConfirmed) {
+        if (isConfirmed){
+            setConfirmedButtonToConfirmed();
+        }
+    }
+
+    private void setConfirmedButtonToConfirmed(){
+        mConfirmButton.setText("CANCEL CONFIRMATION");
+        mConfirmButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
+    }
+
+    private void setConfirmedButtonToNotConfirmed(){
+
+    }
+
     private void setTexts(){
         mTitle.setText(mEvent.getName());
         mWhen.setText(DateUtils.sdfWithTime.format(mEvent.getDateAndTime()));
@@ -60,7 +76,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
     }
 
-    private boolean getInformationAboutUserConfirmation(String userUid, long eventId){
+    private void getInformationAboutUserConfirmation(String userUid, long eventId){
         Log.d(TAG, "getInformationAboutUserConfirmation: called");
         final boolean[] toReturn = {false};
         AsyncHttpClient client = new AsyncHttpClient();
@@ -75,7 +91,10 @@ public class EventDetailActivity extends AppCompatActivity {
                 super.onSuccess(statusCode, headers, response);
                 Log.d(TAG, "onSuccess: This event is already confirmed by user");
                 List<ConfirmationModel> listOfConfirmation = ConfirmationModel.fromJson(response);
-                toReturn[0] = (listOfConfirmation.size()>0);
+                if (listOfConfirmation.size()>0){
+                    confirmationId = listOfConfirmation.get(0).getId();
+                    setConfirmationButton(true);
+                }
             }
 
             @Override
@@ -84,7 +103,6 @@ public class EventDetailActivity extends AppCompatActivity {
                 Log.e(TAG, "onFailure: error on checking is this event confirmed", throwable);
             }
         });
-        return toReturn[0];
     }
 
     private View.OnClickListener confirmedButtonClickedListener = new View.OnClickListener() {
@@ -94,28 +112,47 @@ public class EventDetailActivity extends AppCompatActivity {
                 AsyncHttpClient client = new AsyncHttpClient();
                 client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
                 String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_confirmation_address);
-                JSONObject params = new JSONObject();
-                params.put("id", 0);
-                params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                params.put("event", getResources().getString(R.string.api_event_address) + "/" + mEvent.getId());
-                Log.d(TAG, "onClick: " + params.toString());
-                StringEntity stringParams = new StringEntity(params.toString());
-                client.post(getApplicationContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        Log.d(TAG, "onSuccess: Successfully add confirmtion");
-                        Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
-                        startActivity(intent);
-                    }
+                if (confirmationId > 0){
+                    requestAddress = requestAddress + "/" + confirmationId;
+                    client.delete(requestAddress, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            Log.d(TAG, "onSuccess: successfully delete confirmation");
+                            Toast.makeText(getBaseContext(),"Successfully cancel confirmation",Toast.LENGTH_SHORT);
+                            Intent intent = new Intent(getBaseContext(),MyConfirmationsLists.class);
+                            startActivity(intent);
+                        }
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.e(TAG, "onFailure: " + responseBody.toString(),error  );
-                        Toast.makeText(getApplicationContext(),"Error while confirmed!",Toast.LENGTH_SHORT).show();
-                    }
-                });
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                            Log.e(TAG, "onFailure: error during deleting confirmation " +responseBody.toString(), error);
+                        }
+                    });
+                } else {
+                    JSONObject params = new JSONObject();
+                    params.put("id", 0);
+                    params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    params.put("event", getResources().getString(R.string.api_event_address) + "/" + mEvent.getId());
+                    Log.d(TAG, "onClick: " + params.toString());
+                    StringEntity stringParams = new StringEntity(params.toString());
+                    client.post(getApplicationContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            Log.d(TAG, "onSuccess: Successfully add confirmtion");
+                            Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                            Log.e(TAG, "onFailure: " + responseBody.toString(),error  );
+                            Toast.makeText(getApplicationContext(),"Error while confirmed!",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
             } catch (Exception e){
-
+                Log.e(TAG, "onClick: Error during confirmation events",e);
             }
         }
     };
