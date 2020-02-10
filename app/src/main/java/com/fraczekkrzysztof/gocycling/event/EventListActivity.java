@@ -27,6 +27,7 @@ import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
+import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -207,6 +208,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             case R.id.my_confirmation_menu:
                 Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
                 startActivity(intent);
+                break;
+            case R.id.new_event_menu:
+                Intent intent2 = new Intent(getApplicationContext(), NewEventActivity.class);
+                startActivity(intent2);
                 break;
 
         }
