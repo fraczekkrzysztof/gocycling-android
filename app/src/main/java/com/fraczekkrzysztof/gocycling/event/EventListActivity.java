@@ -26,6 +26,7 @@ import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -213,7 +214,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                 Intent intent2 = new Intent(getApplicationContext(), NewEventActivity.class);
                 startActivity(intent2);
                 break;
-
+            case R.id.my_account_menu:
+                Intent intent3 = new Intent(getApplicationContext(), MyAccount.class);
+                startActivity(intent3);
+                break;
         }
         menuItem.setChecked(false);
         mDrawerLayout.closeDrawer(GravityCompat.START);
