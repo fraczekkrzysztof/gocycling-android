@@ -1,7 +1,6 @@
 package com.fraczekkrzysztof.gocycling.logging;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -13,11 +12,22 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
+import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
+
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.entity.StringEntity;
+
+import org.json.JSONObject;
 
 public class LoggingActivity extends AppCompatActivity {
 
@@ -72,6 +82,7 @@ public class LoggingActivity extends AppCompatActivity {
             if (resultCode ==RESULT_OK){
 
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                checkThatUserExistsOrCreate(user);
                 Log.d(TAG, "onActivityResult: user successfully logged in " + user.getUid());
                 Toast.makeText(getApplicationContext(),"Successfully logged in!",Toast.LENGTH_SHORT).show();
                 startApp();
@@ -79,6 +90,62 @@ public class LoggingActivity extends AppCompatActivity {
                 Log.d(TAG, "onActivityResult: " + response.getError().getMessage());
                 Toast.makeText(getApplicationContext(),"Error during logging in!",Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    private void checkThatUserExistsOrCreate(final FirebaseUser user){
+        try{
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
+            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+            client.get(requestAddress, new JsonHttpResponseHandler(){
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    Log.d(TAG, "onSuccess: Successfully return user list");
+                    super.onSuccess(statusCode, headers, response);
+                    List<UserModel> userLists = UserModel.fromJson(response);
+                    for (UserModel userModel : userLists){
+                        if (userModel.getId().equals(user.getUid())) {
+                            Log.d(TAG, "onSuccess: user already exists in database");
+                           return;
+                        }
+                    }
+                    createUser(user);
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
+                    super.onFailure(statusCode, headers, responseString, throwable);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "checkThatUserExistsOrCreate: error during checking that user exists in database", e);
+        }
+    }
+    private void createUser(FirebaseUser user){
+        try{
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
+            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+            JSONObject params = new JSONObject();
+            params.put("id", user.getUid());
+            params.put("name", user.getDisplayName());
+            Log.d(TAG, "onClick: " + params.toString());
+            StringEntity stringParams = new StringEntity(params.toString());
+            client.post(getBaseContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    Log.d(TAG, "onSuccess: successfuly saved user in db");
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    Log.e(TAG, "onFailure: error during saving user to db", error);
+                }
+            });
+        } catch (Exception e){
+            Log.e(TAG, "createUser: error during creating user", e);
         }
     }
 }
