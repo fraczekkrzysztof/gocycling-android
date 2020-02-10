@@ -40,8 +40,8 @@ public class UserModel {
         this.name = name;
     }
 
-    public static List<UserModel> fromJson(JSONObject jsonObject) {
-        Log.d(TAG, "fromJson: parsing response for receiving list of events");
+    public static List<UserModel> fromJsonUserList(JSONObject jsonObject) {
+        Log.d(TAG, "fromJsonUserList: parsing response for receiving list of userModel");
         List<UserModel> userList = new ArrayList<>();
         try{
             JSONArray userArray= jsonObject.getJSONObject("_embedded").getJSONArray("users");
@@ -57,6 +57,17 @@ public class UserModel {
             e.printStackTrace();
         }
         return userList;
+    }
 
+    public static UserModel fromJsonUser(JSONObject jsonObject){
+        Log.d(TAG, "fromJsonUser: parsing response for receive single UserModel");
+        UserModel userModel = new UserModel();
+        try{
+            userModel.setId(jsonObject.getString("id"));
+            userModel.setName(jsonObject.getString("name"));
+        } catch (Exception e){
+            Log.e(TAG, "fromJsonUser: exception during parsing response", e);
+        }
+        return userModel;
     }
 }

@@ -13,7 +13,6 @@ import com.firebase.ui.auth.IdpResponse;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -25,6 +24,8 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.HttpConnection;
+import cz.msebera.android.httpclient.HttpStatus;
 import cz.msebera.android.httpclient.entity.StringEntity;
 
 import org.json.JSONObject;
@@ -98,25 +99,30 @@ public class LoggingActivity extends AppCompatActivity {
             AsyncHttpClient client = new AsyncHttpClient();
             client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
             String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+            requestAddress = requestAddress + "/" + user.getUid();
+            Log.d(TAG, "checkThatUserExistsOrCreate: request addres");
             client.get(requestAddress, new JsonHttpResponseHandler(){
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     Log.d(TAG, "onSuccess: Successfully return user list");
                     super.onSuccess(statusCode, headers, response);
-                    List<UserModel> userLists = UserModel.fromJson(response);
-                    for (UserModel userModel : userLists){
-                        if (userModel.getId().equals(user.getUid())) {
-                            Log.d(TAG, "onSuccess: user already exists in database");
-                           return;
-                        }
+                    UserModel userModel = UserModel.fromJsonUser(response);
+                    if (userModel.getId().equals(user.getUid())){
+                        Log.d(TAG, "onSuccess: user already exists in database");
+                        return;
                     }
-                    createUser(user);
                 }
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
-                    super.onFailure(statusCode, headers, responseString, throwable);
+                    if (statusCode == HttpStatus.SC_NOT_FOUND){
+                        Log.d(TAG, "onFailure: user don't exist. Start saving into db");
+                        createUser(user);
+                    } else {
+                        Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
+                        super.onFailure(statusCode, headers, responseString, throwable);    
+                    }
+                    
                 }
             });
         } catch (Exception e) {
