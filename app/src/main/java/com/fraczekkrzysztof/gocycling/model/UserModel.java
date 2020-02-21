@@ -40,7 +40,7 @@ public class UserModel {
         this.name = name;
     }
 
-    public static List<UserModel> fromJsonUserList(JSONObject jsonObject) {
+    public static List<UserModel> fromJsonUserList(JSONObject jsonObject, boolean getId) {
         Log.d(TAG, "fromJsonUserList: parsing response for receiving list of userModel");
         List<UserModel> userList = new ArrayList<>();
         try{
@@ -48,7 +48,9 @@ public class UserModel {
             for (int i = 0; i < userArray.length(); i++) {
                 JSONObject userObject = userArray.getJSONObject(i);
                 UserModel userModel = new UserModel();
-                userModel.setId(userObject.getString("id"));
+                if (getId){
+                    userModel.setId(userObject.getString("id"));
+                }
                 userModel.setName(userObject.getString("name"));
                 userList.add(userModel);
             }
@@ -59,11 +61,13 @@ public class UserModel {
         return userList;
     }
 
-    public static UserModel fromJsonUser(JSONObject jsonObject){
+    public static UserModel fromJsonUser(JSONObject jsonObject, boolean getId){
         Log.d(TAG, "fromJsonUser: parsing response for receive single UserModel");
         UserModel userModel = new UserModel();
         try{
-            userModel.setId(jsonObject.getString("id"));
+            if (getId){
+                userModel.setId(jsonObject.getString("id"));
+            }
             userModel.setName(jsonObject.getString("name"));
         } catch (Exception e){
             Log.e(TAG, "fromJsonUser: exception during parsing response", e);

@@ -60,7 +60,7 @@ public class MyAccount extends AppCompatActivity {
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     Log.d(TAG, "onSuccess: Successfully return user list");
                     super.onSuccess(statusCode, headers, response);
-                    UserModel userModel = UserModel.fromJsonUser(response);
+                    UserModel userModel = UserModel.fromJsonUser(response,true);
                     if (userModel.getId().equals(user.getUid())){
                         setUserInformation(userModel);
                     }
