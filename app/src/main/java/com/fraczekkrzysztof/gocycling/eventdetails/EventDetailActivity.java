@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +28,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -39,8 +42,9 @@ public class EventDetailActivity extends AppCompatActivity {
     TextView mWhere;
     TextView mWhen;
     EventModel mEvent;
-    List<String> mUserConfirmed;
+    List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
+    ListView mListView;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,9 +52,11 @@ public class EventDetailActivity extends AppCompatActivity {
         mTitle = findViewById(R.id.event_detail_title);
         mWhere = findViewById(R.id.event_detail_where);
         mWhen = findViewById(R.id.event_detail_when);
+        mListView = findViewById(R.id.list_of_users_confirmed);
         mConfirmButton = findViewById(R.id.event_confirm_button);
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
         mEvent = (EventModel) getIntent().getSerializableExtra("Event");
+        getSupportActionBar().setSubtitle("Events details");
         Log.d(TAG, "onCreate: started!");
         getInformationAboutUserConfirmation(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
         getConfirmedUser();
@@ -176,6 +182,7 @@ public class EventDetailActivity extends AppCompatActivity {
                 for (UserModel user : userList){
                     mUserConfirmed.add(user.getName());
                 }
+                setArrayAdapterToListView();
                 Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
             }
 
@@ -185,5 +192,10 @@ public class EventDetailActivity extends AppCompatActivity {
                 Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
             }
         });
+    }
+
+    private void setArrayAdapterToListView(){
+        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,mUserConfirmed);
+        mListView.setAdapter(arrayAdapter);
     }
 }

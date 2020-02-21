@@ -65,9 +65,9 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         mProgressBar.setVisibility(View.INVISIBLE);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
-
         Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
         setSupportActionBar(mToolbar);
+        getSupportActionBar().setSubtitle("All Events");
         mDrawerLayout = findViewById(R.id.event_list_layout);
         mNavigationView = findViewById(R.id.navigation);
         ((TextView)mNavigationView.getHeaderView(0).findViewById(R.id.header_text)).
@@ -109,9 +109,9 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         Log.d(TAG, "getEvents: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_address);
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_current);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("created", SortTypes.DESC);
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "Events: created request " + requestAddress);
         mProgressBar.setVisibility(View.VISIBLE);
         client.get(requestAddress, new JsonHttpResponseHandler(){

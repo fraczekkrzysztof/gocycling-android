@@ -44,6 +44,7 @@ public class MyAccount extends AppCompatActivity {
 
         mUpdateButton = findViewById(R.id.my_account_update_button);
         mUpdateButton.setOnClickListener(updateButtonListener);
+        getSupportActionBar().setSubtitle("My account");
         getUserInfo(FirebaseAuth.getInstance().getCurrentUser());
 
     }

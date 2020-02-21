@@ -62,6 +62,7 @@ public class NewEventActivity extends AppCompatActivity {
                 }
             }
         });
+        getSupportActionBar().setSubtitle("New event");
     }
 
     private void showDateTimeDialog(final EditText date_time_in) {
