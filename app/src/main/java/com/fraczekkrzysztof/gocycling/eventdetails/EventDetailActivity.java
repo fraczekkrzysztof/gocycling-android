@@ -16,6 +16,7 @@ import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
 import com.fraczekkrzysztof.gocycling.model.ConfirmationModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.model.UserModel;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,6 +39,7 @@ public class EventDetailActivity extends AppCompatActivity {
     TextView mWhere;
     TextView mWhen;
     EventModel mEvent;
+    List<String> mUserConfirmed;
     Button mConfirmButton;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,6 +53,7 @@ public class EventDetailActivity extends AppCompatActivity {
         mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         Log.d(TAG, "onCreate: started!");
         getInformationAboutUserConfirmation(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
+        getConfirmedUser();
         setTexts();
     }
 
@@ -156,4 +159,31 @@ public class EventDetailActivity extends AppCompatActivity {
             }
         }
     };
+
+    private void getConfirmedUser(){
+        Log.d(TAG, "getConfirmedUser: called");
+        final boolean[] toReturn = {false};
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_user_confirmed);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + mEvent.getId();
+        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
+                for (UserModel user : userList){
+                    mUserConfirmed.add(user.getName());
+                }
+                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
+            }
+        });
+    }
 }
