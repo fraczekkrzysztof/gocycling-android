@@ -50,7 +50,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 
     private RecyclerView mRecyclerView;
     private EventListRecyclerViewAdapter mAdapter;
-    private ProgressBar mProgressBar;
     private SwipeRefreshLayout eventListSwipe;
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
@@ -61,8 +60,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event_list);
-        mProgressBar = findViewById(R.id.event_list_progress);
-        mProgressBar.setVisibility(View.INVISIBLE);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
         Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
@@ -96,7 +93,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     private void initRecyclerView(){
         Log.d(TAG, "initRecyclerView: init recycler view");
         mRecyclerView = findViewById(R.id.recycler_view);
-        mAdapter = new EventListRecyclerViewAdapter(getApplicationContext());
+        mAdapter = new EventListRecyclerViewAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setOnScrollListener(prOnScrollListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -106,6 +103,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     }
 
     private void getEvents(int page){
+        eventListSwipe.setRefreshing(true);
         Log.d(TAG, "getEvents: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
@@ -113,7 +111,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "Events: created request " + requestAddress);
-        mProgressBar.setVisibility(View.VISIBLE);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -124,15 +121,17 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                     totalPages = EventModel.getTotalPageFromJson(response);
                 }
                 mAdapter.addEvents(listEvents);
+                eventListSwipe.setRefreshing(false);
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
+                Toast.makeText(EventListActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
                 Log.d(TAG, errorResponse.toString());
+                eventListSwipe.setRefreshing(false);
             }
         });
-        mProgressBar.setVisibility(View.INVISIBLE);
     }
 
     private void refreshData(){
