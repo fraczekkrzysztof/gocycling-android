@@ -30,9 +30,7 @@ public class MyConfirmationsLists extends AppCompatActivity {
 
     private static final String TAG = "MyConfirmationsLists";
     private RecyclerView mRecyclerView;
-    //will use the same adapter as event List
     private MyConfirmationListRecyclerViewAdapter mAdapter;
-    private ProgressBar mProgressBar;
     private SwipeRefreshLayout mConfirmationListSwype;
     private int page = 0;
     private int totalPages = 0;
@@ -41,12 +39,9 @@ public class MyConfirmationsLists extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_confirmations);
-        mProgressBar = findViewById(R.id.myconfirmstions_list_progress);
-        mProgressBar.setVisibility(View.INVISIBLE);
         mConfirmationListSwype = findViewById(R.id.myconfirmations_list_swipe);
         mConfirmationListSwype.setOnRefreshListener(OnRefreshListener);
         initRecyclerView();
-        getEvents(0);
         getSupportActionBar().setSubtitle("Confirmed");
     }
 
@@ -64,6 +59,7 @@ public class MyConfirmationsLists extends AppCompatActivity {
 
     private void getEvents(int page){
         Log.d(TAG, "getEvents: called");
+        mConfirmationListSwype.setRefreshing(true);
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_confirmed);
@@ -71,7 +67,6 @@ public class MyConfirmationsLists extends AppCompatActivity {
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "getEvents: created request" + requestAddress);
-        mProgressBar.setVisibility(View.VISIBLE);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -82,14 +77,15 @@ public class MyConfirmationsLists extends AppCompatActivity {
                     totalPages = EventModel.getTotalPageFromJson(response);
                 }
                 mAdapter.addEvents(listEvents);
+                mConfirmationListSwype.setRefreshing(false);
             }
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
                 Log.d(TAG, errorResponse.toString());
+                mConfirmationListSwype.setRefreshing(false);
             }
         });
-        mProgressBar.setVisibility(View.INVISIBLE);
 
     }
 
@@ -143,7 +139,9 @@ public class MyConfirmationsLists extends AppCompatActivity {
         return  false;
     }
 
-
-
-
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        refreshData();
+    }
 }

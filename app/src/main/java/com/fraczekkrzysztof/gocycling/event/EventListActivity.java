@@ -75,7 +75,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         mDrawerLayout.addDrawerListener(toogle);
         toogle.syncState();
 
-        getEvents(0);
         initRecyclerView();
         Log.d(TAG, "onCreate:  started.");
     }
@@ -221,5 +220,11 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         menuItem.setChecked(false);
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        refreshData();
     }
 }
