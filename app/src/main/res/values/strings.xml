@@ -8,4 +8,5 @@
     <string name="ok">Yes</string>
     <string name="cancel">No</string>
     <string name="confirmation_delete_question">Are you sure to cancel confirmation?</string>
+    <string name="quit_app_question">Close application?</string>
 </resources>

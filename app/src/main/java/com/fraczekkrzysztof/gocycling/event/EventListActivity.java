@@ -2,6 +2,7 @@ package com.fraczekkrzysztof.gocycling.event;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,6 +57,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     private NavigationView mNavigationView;
     private int page = 0;
     private int totalPages = 0;
+    private AlertDialog mDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +77,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         ActionBarDrawerToggle toogle = new ActionBarDrawerToggle(this,mDrawerLayout,mToolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(toogle);
         toogle.syncState();
-
+        createDialogForQuit();
         initRecyclerView();
         Log.d(TAG, "onCreate:  started.");
     }
@@ -84,9 +87,33 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)){
             mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            mDialog.show();
+//            super.onBackPressed();
         }
 
+    }
+
+
+    private void createDialogForQuit(){
+        DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                finishAffinity();
+                System.exit(0);
+            }
+        };
+
+        DialogInterface.OnClickListener negativeAnswerListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(R.string.quit_app_question);
+        builder.setPositiveButton(R.string.ok, positiveAnswerListener);
+        builder.setNegativeButton(R.string.cancel, negativeAnswerListener);
+
+        mDialog = builder.create();
     }
 
     private void initRecyclerView(){
