@@ -19,6 +19,7 @@ public class EventModel implements Serializable {
     private String name;
     private String place;
     private Date dateAndTime;
+    private String details;
     private long id;
 
     public String getName() {
@@ -45,6 +46,14 @@ public class EventModel implements Serializable {
         this.dateAndTime = dateAndTime;
     }
 
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
     public long getId() {
         return id;
     }
@@ -64,6 +73,7 @@ public class EventModel implements Serializable {
                 eventModel.setId(eventObject.getLong("id"));
                 eventModel.setName(eventObject.getString("name"));
                 eventModel.setPlace(eventObject.getString("place"));
+                eventModel.setDetails(eventObject.getString("details"));
                 eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
                 eventList.add(eventModel);
             }

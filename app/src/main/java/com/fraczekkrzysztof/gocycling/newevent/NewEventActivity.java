@@ -36,6 +36,7 @@ public class NewEventActivity extends AppCompatActivity {
     private EditText mEditTextName;
     private EditText mEditTextPlace;
     private EditText mEditTextDate;
+    private EditText mEditTextDetails;
     private Button mAddButton;
 
     @Override
@@ -47,6 +48,7 @@ public class NewEventActivity extends AppCompatActivity {
         mEditTextName = findViewById(R.id.new_event_name);
         mEditTextPlace = findViewById(R.id.new_event_place);
         mEditTextDate = findViewById(R.id.new_event_date);
+        mEditTextDetails = findViewById(R.id.new_events_detail);
 
         mEditTextDate.setInputType(InputType.TYPE_NULL);
 
@@ -125,6 +127,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("name", mEditTextName.getText().toString());
             params.put("place", mEditTextPlace.getText().toString());
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+            params.put("details", mEditTextDetails.getText().toString());
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString());
             client.post(getApplicationContext(), requestAddress, stringParams, "application/json", new TextHttpResponseHandler() {
