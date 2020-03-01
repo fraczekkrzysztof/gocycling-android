@@ -84,17 +84,31 @@
             android:textColor="@color/primaryTextColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_where"
+            app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"/>
+
+
+        <TextView
+            android:id="@+id/event_detail_already_confirmed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="40dp"
+            android:text="Already confirmed by"
+            android:textColor="@color/blackTextColor"
+            app:layout_constraintBottom_toTopOf="@+id/list_of_users_confirmed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/event_confirm_button" />
 
         <ListView
             android:id="@+id/list_of_users_confirmed"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_confirm_button" />
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_already_confirmed" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

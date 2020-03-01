@@ -175,6 +175,7 @@ public class EventDetailActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             try {
+                mSwipeRefreshLayout.setRefreshing(true);
                 AsyncHttpClient client = new AsyncHttpClient();
                 client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
                 String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_confirmation_address);
@@ -184,14 +185,17 @@ public class EventDetailActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             Log.d(TAG, "onSuccess: successfully delete confirmation");
-                            Toast.makeText(getBaseContext(),"Successfully cancel confirmation",Toast.LENGTH_SHORT);
-                            Intent intent = new Intent(getBaseContext(),MyConfirmationsLists.class);
-                            startActivity(intent);
+                            confirmationId=0;
+                            mSwipeRefreshLayout.setRefreshing(false);
+                            Toast.makeText(getBaseContext(),"Successfully cancel confirmation",Toast.LENGTH_SHORT).show();
+                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
                         }
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                             Log.e(TAG, "onFailure: error during deleting confirmation " +responseBody.toString(), error);
+                            mSwipeRefreshLayout.setRefreshing(false);
+                            Toast.makeText(getApplicationContext(),"Error while canceling confirmation!",Toast.LENGTH_SHORT).show();
                         }
                     });
                 } else {
@@ -205,13 +209,16 @@ public class EventDetailActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             Log.d(TAG, "onSuccess: Successfully add confirmtion");
-                            Intent intent = new Intent(getApplicationContext(), MyConfirmationsLists.class);
-                            startActivity(intent);
+                            confirmationId = getConfirmationIdFromHeaderResponse(headers);
+                            Toast.makeText(EventDetailActivity.this,"Successfully confirmed!",Toast.LENGTH_SHORT).show();
+                            mSwipeRefreshLayout.setRefreshing(false);
+                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
                         }
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: " + responseBody.toString(),error  );
+                            Log.e(TAG, "onFailure: " + responseBody.toString(),error);
+                            mSwipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getApplicationContext(),"Error while confirmed!",Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -242,5 +249,19 @@ public class EventDetailActivity extends AppCompatActivity {
         super.onPostResume();
         refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
         setTexts();
+    }
+
+    public int getConfirmationIdFromHeaderResponse(Header[] headers){
+        int id = 0;
+        for (int i=0 ; i<headers.length; i++ ){
+            if(headers[i].getName().equals("Location")){
+                String address = headers[i].getValue();
+                id = Integer.valueOf(address.substring(address.lastIndexOf("/")+1));
+                return id;
+            }
+            Header header = headers[i];
+            System.out.println(header.getName());
+        }
+        return id;
     }
 }
