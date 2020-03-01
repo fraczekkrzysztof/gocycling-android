@@ -2,6 +2,7 @@ package com.fraczekkrzysztof.gocycling.myaccount;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.net.Uri;
@@ -35,20 +36,28 @@ public class MyAccount extends AppCompatActivity {
     private static final String TAG = "MyAccount";
     private EditText mEditTextUserName;
     private Button mUpdateButton;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_account);
+        mSwipeRefreshLayout = findViewById(R.id.my_account_swipe_refresh);
         mEditTextUserName = findViewById(R.id.myaccount_name);
 
         mUpdateButton = findViewById(R.id.my_account_update_button);
         mUpdateButton.setOnClickListener(updateButtonListener);
         getSupportActionBar().setSubtitle("My account");
-        getUserInfo(FirebaseAuth.getInstance().getCurrentUser());
+
 
     }
 
+    SwipeRefreshLayout.OnRefreshListener mOnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            refreshData();
+        }
+    };
     private void getUserInfo(final FirebaseUser user){
         try{
             AsyncHttpClient client = new AsyncHttpClient();
@@ -65,11 +74,13 @@ public class MyAccount extends AppCompatActivity {
                     if (userModel.getId().equals(user.getUid())){
                         setUserInformation(userModel);
                     }
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                         Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
                         super.onFailure(statusCode, headers, responseString, throwable);
+                        mSwipeRefreshLayout.setRefreshing(false);
                 }
             });
         } catch (Exception e) {
@@ -93,6 +104,7 @@ public class MyAccount extends AppCompatActivity {
 
     private void updateUserData(final FirebaseUser user, final String name){
         try{
+            mSwipeRefreshLayout.setRefreshing(true);
             AsyncHttpClient client = new AsyncHttpClient();
             client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
             String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
@@ -112,6 +124,7 @@ public class MyAccount extends AppCompatActivity {
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     Log.e(TAG, "onFailure: Error during updating user info",error);
                     Toast.makeText(getBaseContext(),"Error during updating information!",Toast.LENGTH_SHORT).show();
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             });
 
@@ -120,7 +133,13 @@ public class MyAccount extends AppCompatActivity {
         }
     }
 
+    private void refreshData(){
+        mSwipeRefreshLayout.setRefreshing(true);
+        getUserInfo(FirebaseAuth.getInstance().getCurrentUser());
+    }
+
     private void updateUserInFirebase(FirebaseUser user, String name){
+        mSwipeRefreshLayout.setRefreshing(true);
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                 .setDisplayName(name)
                 .build();
@@ -135,7 +154,14 @@ public class MyAccount extends AppCompatActivity {
                         } else {
                             Log.d(TAG, "onComplete: Error during updating user profile. " + task.getException());
                         }
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
                 });
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        refreshData();
     }
 }
