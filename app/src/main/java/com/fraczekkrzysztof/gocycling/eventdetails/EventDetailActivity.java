@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
@@ -48,6 +49,8 @@ public class EventDetailActivity extends AppCompatActivity {
     List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
     ListView mListView;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,17 +61,26 @@ public class EventDetailActivity extends AppCompatActivity {
         mListView = findViewById(R.id.list_of_users_confirmed);
         mConfirmButton = findViewById(R.id.event_confirm_button);
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
+        mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         getSupportActionBar().setSubtitle("Events details");
         Log.d(TAG, "onCreate: started!");
-        getInformationAboutUserConfirmation(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
-        getConfirmedUser();
-        setTexts();
     }
+
+    private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            Log.d(TAG, "onRefresh: refreshing");
+            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
+        }
+    };
 
     private void setConfirmationButton(boolean isConfirmed) {
         if (isConfirmed){
             setConfirmedButtonToConfirmed();
+        } else {
+            setConfirmedButtonToNotConfirmed();
         }
     }
 
@@ -78,6 +90,8 @@ public class EventDetailActivity extends AppCompatActivity {
     }
 
     private void setConfirmedButtonToNotConfirmed(){
+        mConfirmButton.setText("CONFIRM");
+        mConfirmButton.setBackgroundColor(getResources().getColor(R.color.primaryDarkColor));
 
     }
 
@@ -85,6 +99,13 @@ public class EventDetailActivity extends AppCompatActivity {
         mTitle.setText(mEvent.getName());
         mWhen.setText(DateUtils.sdfWithTime.format(mEvent.getDateAndTime()));
         mWhere.setText(mEvent.getPlace());
+
+    }
+
+    private void refreshData(String userUid, long eventId){
+        mSwipeRefreshLayout.setRefreshing(true);
+        getInformationAboutUserConfirmation(userUid,eventId);
+        getConfirmedUser();
 
     }
 
@@ -103,9 +124,9 @@ public class EventDetailActivity extends AppCompatActivity {
                 super.onSuccess(statusCode, headers, response);
                 Log.d(TAG, "onSuccess: This event is already confirmed by user");
                 List<ConfirmationModel> listOfConfirmation = ConfirmationModel.fromJson(response);
+                setConfirmationButton((listOfConfirmation.size()>0));
                 if (listOfConfirmation.size()>0){
                     confirmationId = listOfConfirmation.get(0).getId();
-                    setConfirmationButton(true);
                 }
             }
 
@@ -113,6 +134,39 @@ public class EventDetailActivity extends AppCompatActivity {
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 Log.e(TAG, "onFailure: error on checking is this event confirmed", throwable);
+            }
+        });
+    }
+
+
+
+    private void getConfirmedUser(){
+        Log.d(TAG, "getConfirmedUser: called");
+        mUserConfirmed.clear();
+        final boolean[] toReturn = {false};
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_user_confirmed);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + mEvent.getId();
+        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
+                for (UserModel user : userList){
+                    mUserConfirmed.add(user.getName());
+                }
+                setArrayAdapterToListView();
+                mSwipeRefreshLayout.setRefreshing(false);
+                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                mSwipeRefreshLayout.setRefreshing(false);
+                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
             }
         });
     }
@@ -169,34 +223,6 @@ public class EventDetailActivity extends AppCompatActivity {
         }
     };
 
-    private void getConfirmedUser(){
-        Log.d(TAG, "getConfirmedUser: called");
-        final boolean[] toReturn = {false};
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_user_confirmed);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + mEvent.getId();
-        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
-        client.get(requestAddress,new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
-                for (UserModel user : userList){
-                    mUserConfirmed.add(user.getName());
-                }
-                setArrayAdapterToListView();
-                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
-            }
-        });
-    }
-
     private void setArrayAdapterToListView(){
         ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,mUserConfirmed){
             @NonNull
@@ -209,5 +235,12 @@ public class EventDetailActivity extends AppCompatActivity {
             }
         };
         mListView.setAdapter(arrayAdapter);
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
+        setTexts();
     }
 }
