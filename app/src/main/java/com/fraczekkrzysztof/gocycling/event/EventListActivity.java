@@ -31,6 +31,11 @@ import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -58,11 +63,20 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     private int page = 0;
     private int totalPages = 0;
     private AlertDialog mDialog;
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event_list);
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
         Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
@@ -88,7 +102,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
             mDialog.show();
-//            super.onBackPressed();
         }
 
     }

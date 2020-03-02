@@ -26,6 +26,9 @@
             android:name=".event.EventListActivity"
             android:theme="@style/AppThemeNoActionBar" />
         <activity android:name=".eventdetails.EventDetailActivity" />
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5536311667833840~4590670210"/>
     </application>
 
 </manifest>

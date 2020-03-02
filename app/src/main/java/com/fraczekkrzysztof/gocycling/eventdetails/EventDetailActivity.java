@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -34,6 +35,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.entity.StringEntity;
@@ -48,24 +50,29 @@ public class EventDetailActivity extends AppCompatActivity {
     EventModel mEvent;
     List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
+    Button mDetailButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
+    AlertDialog mDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: started!");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event_details);
+        mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         mTitle = findViewById(R.id.event_detail_title);
         mWhere = findViewById(R.id.event_detail_where);
         mWhen = findViewById(R.id.event_detail_when);
         mListView = findViewById(R.id.list_of_users_confirmed);
         mConfirmButton = findViewById(R.id.event_confirm_button);
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
+        setDialogMessage();
+        mDetailButton = findViewById(R.id.event_details_button);
+        mDetailButton.setOnClickListener(detailsButtonClickedListener);
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
-        mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         getSupportActionBar().setSubtitle("Events details");
-        Log.d(TAG, "onCreate: started!");
     }
 
     private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
@@ -171,6 +178,13 @@ public class EventDetailActivity extends AppCompatActivity {
         });
     }
 
+    private View.OnClickListener detailsButtonClickedListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            mDialog.show();
+        }
+    };
+
     private View.OnClickListener confirmedButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -249,6 +263,17 @@ public class EventDetailActivity extends AppCompatActivity {
         super.onPostResume();
         refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
         setTexts();
+    }
+
+    private void setDialogMessage(){
+        String eventDetails = mEvent.getDetails();
+        if (eventDetails == null){
+            eventDetails = "";
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(eventDetails);
+        builder.setNegativeButton(R.string.close,null);
+
+        mDialog = builder.create();
     }
 
     public int getConfirmationIdFromHeaderResponse(Header[] headers){

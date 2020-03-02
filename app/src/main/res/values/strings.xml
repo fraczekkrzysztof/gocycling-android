@@ -7,6 +7,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="ok">Yes</string>
     <string name="cancel">No</string>
+    <string name="close">Close</string>
     <string name="confirmation_delete_question">Are you sure to cancel confirmation?</string>
     <string name="quit_app_question">Close application?</string>
 </resources>
