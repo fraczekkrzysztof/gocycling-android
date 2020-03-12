@@ -167,7 +167,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
                 Toast.makeText(EventListActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
-                Log.d(TAG, errorResponse.toString());
+                Log.e(TAG,"Error during retrieving event list", throwable);
+                if (errorResponse != null){
+                    Log.d(TAG, errorResponse.toString());
+                }
                 eventListSwipe.setRefreshing(false);
             }
         });
