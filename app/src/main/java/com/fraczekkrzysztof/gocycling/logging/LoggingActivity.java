@@ -138,8 +138,8 @@ public class LoggingActivity extends AppCompatActivity {
             params.put("id", user.getUid());
             params.put("name", user.getDisplayName());
             Log.d(TAG, "onClick: " + params.toString());
-            StringEntity stringParams = new StringEntity(params.toString());
-            client.post(getBaseContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
+            StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
+            client.post(getBaseContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.d(TAG, "onSuccess: successfuly saved user in db");

@@ -129,8 +129,8 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
             params.put("details", mEditTextDetails.getText().toString());
             Log.d(TAG, "onClick: " + params.toString());
-            StringEntity stringParams = new StringEntity(params.toString());
-            client.post(getApplicationContext(), requestAddress, stringParams, "application/json", new TextHttpResponseHandler() {
+            StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
+            client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     Log.e(TAG, "onFailure: error during creating event " + responseString,throwable );

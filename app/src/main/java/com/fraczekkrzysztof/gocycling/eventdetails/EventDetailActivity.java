@@ -218,8 +218,8 @@ public class EventDetailActivity extends AppCompatActivity {
                     params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
                     params.put("event", getResources().getString(R.string.api_event_address) + "/" + mEvent.getId());
                     Log.d(TAG, "onClick: " + params.toString());
-                    StringEntity stringParams = new StringEntity(params.toString());
-                    client.post(getApplicationContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
+                    StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
+                    client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new AsyncHttpResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             Log.d(TAG, "onSuccess: Successfully add confirmtion");
