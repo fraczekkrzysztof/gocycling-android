@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 
@@ -127,6 +128,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("name", mEditTextName.getText().toString());
             params.put("place", mEditTextPlace.getText().toString());
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+            params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
