@@ -44,6 +44,7 @@ public class LoggingActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null){
             Log.d(TAG, "onCreate: user already logged in. Redirect to EventListActivity");
+            checkThatUserExistsOrCreate(user);
             startApp();
         } else {
             Log.d(TAG, "onCreate: user not logged. Start logging.");
