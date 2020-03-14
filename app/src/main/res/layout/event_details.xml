@@ -36,6 +36,8 @@
             app:layout_constraintHorizontal_bias="0.77"
             app:layout_constraintStart_toEndOf="@+id/event_detail_title"
             app:layout_constraintTop_toTopOf="parent" />
+
+
         <TextView
             android:id="@+id/event_detail_when_label"
             android:layout_width="wrap_content"
@@ -86,18 +88,32 @@
 
         <Button
             android:id="@+id/event_confirm_button"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
             android:layout_marginTop="30dp"
-            android:layout_marginStart="80dp"
-            android:layout_marginEnd="80dp"
-            android:text="@string/event_details_button_confirm"
+            android:layout_marginEnd="50dp"
             android:background="@color/primaryDarkColor"
+            android:text="@string/event_details_button_confirm"
             android:textColor="@color/primaryTextColor"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"
+            app:layout_constraintEnd_toStartOf="@id/event_conversation"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_where"
-            app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"/>
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
+
+        <ImageButton
+            android:id="@+id/event_conversation"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="50dp"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_marginBottom="10dp"
+            android:scaleType="fitXY"
+            android:background="@drawable/chat"
+            app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/event_confirm_button"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
 
 
         <TextView
