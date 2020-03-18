@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +22,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
+import com.fraczekkrzysztof.gocycling.conversation.ConversationListActivity;
 import com.fraczekkrzysztof.gocycling.model.ConfirmationModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
@@ -51,6 +53,7 @@ public class EventDetailActivity extends AppCompatActivity {
     List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
     Button mDetailButton;
+    ImageButton mConversationButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
     AlertDialog mDialog;
@@ -67,6 +70,8 @@ public class EventDetailActivity extends AppCompatActivity {
         mListView = findViewById(R.id.list_of_users_confirmed);
         mConfirmButton = findViewById(R.id.event_confirm_button);
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
+        mConversationButton = findViewById(R.id.event_conversation);
+        mConversationButton.setOnClickListener(conversationClickedListener);
         setDialogMessage();
         mDetailButton = findViewById(R.id.event_details_button);
         mDetailButton.setOnClickListener(detailsButtonClickedListener);
@@ -178,6 +183,15 @@ public class EventDetailActivity extends AppCompatActivity {
         });
     }
 
+    private View.OnClickListener conversationClickedListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Log.d(TAG, "onClick: clicked on conversation button. For event " + mEvent.getId());
+            Intent newCityIntent = new Intent(EventDetailActivity.this, ConversationListActivity.class);
+            newCityIntent.putExtra("Event",mEvent);
+            startActivity(newCityIntent);
+        }
+    };
     private View.OnClickListener detailsButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {

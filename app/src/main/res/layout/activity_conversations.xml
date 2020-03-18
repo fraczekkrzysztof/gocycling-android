@@ -5,13 +5,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-<!--    TODO set content-->
-<!--    tools:context=".myconfirmations.MyConfirmationsLists">-->
+    tools:context=".conversation.ConversationListActivity">-
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/conversation_list_swipe"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/conversation_footer"
        >
 
         <androidx.recyclerview.widget.RecyclerView
@@ -30,12 +30,11 @@
         android:gravity="bottom">
 
         <EditText
-            android:id="@+id/messageInput"
+            android:id="@+id/conversation_message_input"
             android:layout_width="0dp"
             android:layout_height="fill_parent"
             android:layout_weight="1"
             android:textColor="@color/blackTextColor"
-            android:textColorHint="@color/blackTextColor"
             android:hint="@string/prompt_msg"
             android:imeActionLabel="@string/action_send"
             android:imeOptions="actionUnspecified"
@@ -44,13 +43,12 @@
             android:gravity="center_horizontal"/>
 
         <ImageButton
-            android:id="@+id/sendButton"
+            android:id="@+id/conversation_send_button"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:background="@drawable/send"
             android:scaleType="fitXY"
             android:contentDescription="@string/action_send"/>
     </LinearLayout>
-
 
 </RelativeLayout>
