@@ -30,6 +30,7 @@ import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
+import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -258,6 +259,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             case R.id.my_account_menu:
                 Intent intent3 = new Intent(getApplicationContext(), MyAccount.class);
                 startActivity(intent3);
+                break;
+            case R.id.my_events_menu:
+                Intent intent4 = new Intent(getApplicationContext(), MyEventsLists.class);
+                startActivity(intent4);
                 break;
         }
         menuItem.setChecked(false);

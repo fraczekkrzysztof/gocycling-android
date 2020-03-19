@@ -86,7 +86,6 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
         builder.setNegativeButton(R.string.cancel, negativeAnswerListener);
 
         mDialog = builder.create();
-        //TODO finish creating dialog and deleting confirmartion
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
