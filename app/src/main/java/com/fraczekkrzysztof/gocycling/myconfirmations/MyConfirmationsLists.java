@@ -94,7 +94,6 @@ public class MyConfirmationsLists extends AppCompatActivity {
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-            mConfirmationListSwype.setRefreshing(false);
         }
     };
 

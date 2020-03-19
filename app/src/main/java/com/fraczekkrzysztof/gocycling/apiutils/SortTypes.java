@@ -1,7 +1,7 @@
 package com.fraczekkrzysztof.gocycling.apiutils;
 
 public enum SortTypes {
-    ASC("acs"),
+    ASC("asc"),
     DESC("desc");
 
     private String value;

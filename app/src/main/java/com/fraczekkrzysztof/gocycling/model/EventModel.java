@@ -21,6 +21,7 @@ public class EventModel implements Serializable {
     private Date dateAndTime;
     private String details;
     private String createdBy;
+    private boolean canceled;
     private long id;
 
     public String getName() {
@@ -71,6 +72,14 @@ public class EventModel implements Serializable {
         this.createdBy = createdBy;
     }
 
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
+    }
+
     public static List<EventModel> fromJson(JSONObject jsonObject) {
         Log.d(TAG, "fromJson: parsing response for receiving list of events");
         List<EventModel> eventList = new ArrayList<>();
@@ -84,6 +93,7 @@ public class EventModel implements Serializable {
                 eventModel.setPlace(eventObject.getString("place"));
                 eventModel.setDetails(eventObject.getString("details"));
                 eventModel.setCreatedBy(eventObject.getString("createdBy"));
+                eventModel.setCanceled(eventObject.getBoolean("canceled"));
                 eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
                 eventList.add(eventModel);
             }

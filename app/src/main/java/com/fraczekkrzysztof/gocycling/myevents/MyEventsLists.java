@@ -124,7 +124,6 @@ public class MyEventsLists extends AppCompatActivity {
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-            myEventListSwipe.setRefreshing(false);
         }
     };
 

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -54,13 +55,22 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
+        if (mEventList.get(position).isCanceled()){
+            holder.textDate.setTextColor(mContext.getResources().getColor(R.color.hint));
+            holder.textTitle.setTextColor(mContext.getResources().getColor(R.color.hint));
+        }
+
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
-                Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
-                newCityIntent.putExtra("Event",mEventList.get(position));
-                mContext.startActivity(newCityIntent);
+                if (mEventList.get(position).isCanceled()) {
+                    Toast.makeText(mContext,"This event is calceled",Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
+                    Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
+                    newCityIntent.putExtra("Event", mEventList.get(position));
+                    mContext.startActivity(newCityIntent);
+                }
             }
         });
     }

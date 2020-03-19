@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -66,6 +67,11 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
         holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
+        if (mEventList.get(position).isCanceled()){
+            holder.textDate.setTextColor(mContext.getResources().getColor(R.color.hint));
+            holder.textTitle.setTextColor(mContext.getResources().getColor(R.color.hint));
+        }
+
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -90,19 +96,27 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
-                Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
-                newCityIntent.putExtra("Event",mEventList.get(position));
-                mContext.startActivity(newCityIntent);
+                if (mEventList.get(position).isCanceled()) {
+                    Toast.makeText(mContext, "This event is canceled", Toast.LENGTH_SHORT).show();
+                } else{
+                    Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
+                    Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
+                    newCityIntent.putExtra("Event",mEventList.get(position));
+                    mContext.startActivity(newCityIntent);
+                }
             }
         });
 
         holder.mDeleteButton.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: deleting confirmation " + position);
-                toDelete = position;
-                mDialog.show();
+                if (mEventList.get(position).isCanceled()) {
+                    Toast.makeText(mContext,"This event is canceled",Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d(TAG, "onClick: deleting confirmation " + position);
+                    toDelete = position;
+                    mDialog.show();
+                }
             }
         }));
     }

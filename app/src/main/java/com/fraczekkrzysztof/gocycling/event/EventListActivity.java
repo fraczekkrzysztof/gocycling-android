@@ -224,7 +224,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-            eventListSwipe.setRefreshing(false);
         }
     };
 

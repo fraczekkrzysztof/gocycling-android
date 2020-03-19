@@ -150,7 +150,6 @@ public class ConversationListActivity extends AppCompatActivity{
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-            conversationListSwipe.setRefreshing(false);
         }
     };
 
