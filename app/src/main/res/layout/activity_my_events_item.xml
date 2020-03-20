@@ -29,18 +29,34 @@
         android:textColor="#000000"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/myevent_list_edit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/myevent_list_time" />
+
+    <ImageButton
+        android:id="@+id/myevent_list_edit"
+        android:layout_width="45dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="150dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"
+        android:background="#ffffff"
+        android:scaleType="fitXY"
+        app:layout_constraintTop_toBottomOf="@+id/myevent_list_time"
+        app:layout_constraintEnd_toStartOf="@+id/myevent_list_cancel"
+        app:srcCompat="@drawable/edit" />
+
     <ImageButton
         android:id="@+id/myevent_list_cancel"
         android:layout_width="45dp"
         android:layout_height="40dp"
         android:layout_marginTop="10dp"
-        android:scaleType="fitXY"
+        android:layout_marginEnd="15dp"
         android:background="#ffffff"
+        android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.88"
-        app:layout_constraintStart_toEndOf="@+id/myevent_list_title"
         app:layout_constraintTop_toBottomOf="@+id/myevent_list_time"
         app:srcCompat="@drawable/remove" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

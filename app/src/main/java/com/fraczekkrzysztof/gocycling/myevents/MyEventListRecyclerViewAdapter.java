@@ -21,6 +21,7 @@ import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
+import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -104,6 +105,20 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             }
         }));
 
+        holder.mEditButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mEventList.get(position).isCanceled()) {
+                    Toast.makeText(mContext,"This event is canceled",Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(mContext, NewEventActivity.class);
+                    intent.putExtra("EventToEdit", mEventList.get(position));
+                    intent.putExtra("mode","EDIT");
+                    mContext.startActivity(intent);
+                }
+            }
+        });
+
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -157,12 +172,14 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         TextView textDate;
         TextView textTitle;
         ImageButton mDeleteButton;
+        ImageButton mEditButton;
         ConstraintLayout parentLayout;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textDate = itemView.findViewById(R.id.myevent_list_time);
             textTitle = itemView.findViewById(R.id.myevent_list_title);
             mDeleteButton = itemView.findViewById(R.id.myevent_list_cancel);
+            mEditButton = itemView.findViewById(R.id.myevent_list_edit);
             parentLayout = itemView.findViewById(R.id.single_row_myevents_layout);
         }
     }

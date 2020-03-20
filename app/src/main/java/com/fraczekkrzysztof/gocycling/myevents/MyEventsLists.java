@@ -23,6 +23,7 @@ import com.firebase.ui.auth.AuthUI;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
+import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
@@ -132,6 +133,13 @@ public class MyEventsLists extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         refreshData();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent (MyEventsLists.this, EventListActivity.class);
+        startActivity(intent);
     }
 
     void setRefreshing(boolean refreshing){

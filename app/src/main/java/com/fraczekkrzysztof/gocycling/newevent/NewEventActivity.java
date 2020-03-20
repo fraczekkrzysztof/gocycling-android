@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
+import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
@@ -39,6 +41,8 @@ public class NewEventActivity extends AppCompatActivity {
     private EditText mEditTextDate;
     private EditText mEditTextDetails;
     private Button mAddButton;
+    private EventModel mEventToEdit;
+    private String mode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +69,17 @@ public class NewEventActivity extends AppCompatActivity {
                 }
             }
         });
+        mode = getIntent().getStringExtra("mode");
+        mEventToEdit = (EventModel) getIntent().getSerializableExtra("EventToEdit");
         getSupportActionBar().setSubtitle("New event");
+    }
+
+    private void setFieldForEdit(EventModel event){
+        if (event == null) return;
+        mEditTextName.setText(event.getName());
+        mEditTextPlace.setText(event.getPlace());
+        mEditTextDate.setText(DateUtils.sdfWithTime.format(event.getDateAndTime()));
+        mEditTextDetails.setText(event.getDetails());
     }
 
     private void showDateTimeDialog(final EditText date_time_in) {
@@ -97,7 +111,12 @@ public class NewEventActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             if (validateFields()){
-                createEvent();
+                if (mode != null && mode.equals("EDIT")){
+                    updateEvent();
+                } else{
+                    createEvent();
+                }
+
             }
         }
     };
@@ -149,14 +168,57 @@ public class NewEventActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "createEvent: error during creating event", e);
         }
-        
+    }
+
+    private void updateEvent(){
+        try{
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
+            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_address)+"/"+mEventToEdit.getId();
+            JSONObject params = new JSONObject();
+            params.put("name", mEditTextName.getText().toString());
+            params.put("place", mEditTextPlace.getText().toString());
+            params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+            params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
+            params.put("details", mEditTextDetails.getText().toString());
+            Log.d(TAG, "onClick: " + params.toString());
+            StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
+            client.put(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Log.e(TAG, "onFailure: error during updating event " + responseString,throwable );
+                    Toast.makeText(getBaseContext(),"Error during updating event",Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                    Toast.makeText(getBaseContext(),"Successfully updated event",Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getBaseContext(), MyEventsLists.class);
+                    startActivity(intent);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "createEvent: error during creating event", e);
+        }
+    }
+
+    private void setTextForButton(String text){
+        mAddButton.setText(text);
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        mEditTextName.setText("");
-        mEditTextPlace.setText("");
-        mEditTextDate.setText("");
+        if(mode != null && mode.equals("EDIT")){
+            setFieldForEdit(mEventToEdit);
+            setTextForButton("UPDATE");
+        } else {
+            mEditTextName.setText("");
+            mEditTextPlace.setText("");
+            mEditTextDate.setText("");
+            setTextForButton("CREATE");
+        }
     }
+
+
 }
