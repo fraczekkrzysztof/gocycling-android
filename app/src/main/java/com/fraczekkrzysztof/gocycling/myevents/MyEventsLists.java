@@ -113,7 +113,7 @@ public class MyEventsLists extends AppCompatActivity {
         });
     }
 
-    private void refreshData(){
+    void refreshData(){
         mAdapter.clearEvents();
         getEvents();
     }
@@ -132,5 +132,9 @@ public class MyEventsLists extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         refreshData();
+    }
+
+    void setRefreshing(boolean refreshing){
+        myEventListSwipe.setRefreshing(refreshing);
     }
 }

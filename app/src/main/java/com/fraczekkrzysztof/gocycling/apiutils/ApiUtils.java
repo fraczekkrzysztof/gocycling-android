@@ -8,7 +8,7 @@ public class ApiUtils {
     private static final String SORT = "sort=";
     private static final String SIZE = "size=";
     public static final String USER_UID = "userUid=";
-    public static final String EventId = "eventId=";
+    public static final String EVENT_ID = "eventId=";
 
     public static String getPageToRequest(){
         return getPageToRequest(0);
