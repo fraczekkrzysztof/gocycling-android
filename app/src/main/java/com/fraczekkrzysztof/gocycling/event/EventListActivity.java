@@ -149,7 +149,6 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_current);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "Events: created request " + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override

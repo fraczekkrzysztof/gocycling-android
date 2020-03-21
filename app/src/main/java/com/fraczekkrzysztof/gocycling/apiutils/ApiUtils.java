@@ -22,7 +22,7 @@ public class ApiUtils {
         return getSortToRequest(fieldName,SortTypes.ASC);
     }
 
-    public static String getSiezeToRequest(int pageSize){
+    public static String getSizeToRequest(int pageSize){
         return SIZE + pageSize;
     }
 

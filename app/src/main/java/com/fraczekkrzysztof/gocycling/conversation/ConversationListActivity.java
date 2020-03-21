@@ -1,10 +1,8 @@
 package com.fraczekkrzysztof.gocycling.conversation;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -17,13 +15,10 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.ConversationModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 
@@ -80,7 +75,7 @@ public class ConversationListActivity extends AppCompatActivity{
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_conversation_by_event_id);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId="+mEvent.getId();
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSiezeToRequest(1000);
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSizeToRequest(1000);
         Log.d(TAG, "Conversation: created request " + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override

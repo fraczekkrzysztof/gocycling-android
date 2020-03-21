@@ -65,7 +65,6 @@ public class MyConfirmationsLists extends AppCompatActivity {
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_confirmed);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSortToRequest("ev_date_and_time", SortTypes.ASC);
         Log.d(TAG, "getEvents: created request" + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override
