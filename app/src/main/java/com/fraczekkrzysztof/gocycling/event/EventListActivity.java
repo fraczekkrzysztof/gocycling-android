@@ -14,10 +14,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,6 +66,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     private int page = 0;
     private int totalPages = 0;
     private AlertDialog mDialog;
+    private ImageView dwaKolaImage;
     private AdView mAdView;
 
     @Override
@@ -78,6 +81,8 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 //        mAdView = findViewById(R.id.adView);
 //        AdRequest adRequest = new AdRequest.Builder().build();
 //        mAdView.loadAd(adRequest);
+        dwaKolaImage = findViewById(R.id.addImage);
+        dwaKolaImage.setOnClickListener(dwaKolaButtonClickedListener);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
         Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
@@ -106,6 +111,14 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         }
 
     }
+
+    private View.OnClickListener dwaKolaButtonClickedListener =  new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.2-kola.pl/"));
+            startActivity(browserIntent);
+        }
+    };
 
 
     private void createDialogForQuit(){
