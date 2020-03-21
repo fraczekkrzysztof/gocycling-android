@@ -1,8 +1,10 @@
 package com.fraczekkrzysztof.gocycling.conversation;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -100,7 +102,7 @@ public class ConversationListActivity extends AppCompatActivity{
         });
     }
 
-    private void saveConversation(String message){
+    private void saveConversation(final View view,String message){
         try {
             conversationListSwipe.setRefreshing(true);
             Log.d(TAG, "saveConversation: called");
@@ -126,6 +128,7 @@ public class ConversationListActivity extends AppCompatActivity{
                 public void onSuccess(int statusCode, Header[] headers, String responseString) {
                     conversationListSwipe.setRefreshing(false);
                     mMessage.setText(null);
+                    hideSoftInput(view);
                     Toast.makeText(getBaseContext(),"Successfully create conversation",Toast.LENGTH_SHORT).show();
                     refreshData();
                 }
@@ -152,9 +155,17 @@ public class ConversationListActivity extends AppCompatActivity{
         @Override
         public void onClick(View view) {
             Log.d(TAG, "onClick: sending message");
-            saveConversation(mMessage.getText().toString());
+
+            saveConversation(view,mMessage.getText().toString());
         }
     };
+
+    private void hideSoftInput(View view){
+        InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 
     @Override
     protected void onPostResume() {

@@ -74,7 +74,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                Log.d(TAG, "onClick: confirmed deleting " + toDelete);
+                Log.d(TAG, "onClick: confirmed canceling " + toDelete);
                 cancelEvent(mEventList.get(toDelete).getId());
             }
         };
@@ -86,7 +86,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             }
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext).setMessage(R.string.confirmation_delete_question);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext).setMessage(R.string.event_cancel_question);
         builder.setPositiveButton(R.string.ok, positiveAnswerListener);
         builder.setNegativeButton(R.string.cancel, negativeAnswerListener);
 
@@ -98,7 +98,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
                 if (mEventList.get(position).isCanceled()) {
                     Toast.makeText(mContext,"This event is canceled",Toast.LENGTH_SHORT).show();
                 } else {
-                    Log.d(TAG, "onClick: deleting confirmation " + position);
+                    Log.d(TAG, "onClick: canceling event " + position);
                     toDelete = position;
                     mDialog.show();
                 }

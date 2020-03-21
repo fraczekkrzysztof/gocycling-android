@@ -15,5 +15,4 @@
     <string name="api_event_user_confirmed">api/users/search/findUserConfirmedEvent</string>
     <string name="api_conversation">api/conversations</string>
     <string name="api_conversation_by_event_id">api/conversations/search/findByEventId</string>
-
 </resources>
