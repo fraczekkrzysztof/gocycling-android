@@ -15,39 +15,26 @@
             android:id="@+id/event_detail_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="25dp"
+            android:layout_marginStart="15dp"
             android:layout_marginEnd="20dp"
             android:layout_marginTop="25dp"
             android:maxLines="2"
             android:text="TextView"
             android:textColor="@color/blackTextColor"
-            android:textSize="30sp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/event_details_button"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.12"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/event_details_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="30dp"
-            android:background="@color/primaryDarkColor"
-            android:text="DETAILS"
-            android:textColor="@color/primaryTextColor"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
 
         <TextView
             android:id="@+id/event_detail_when_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
-            android:textSize="15dp"
+            android:textSize="10dp"
             android:text="@string/event_details_when"
             android:textColor="@color/blackTextColor"
             app:layout_constraintStart_toStartOf="parent"
@@ -57,21 +44,21 @@
             android:id="@+id/event_detail_when"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="70dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
             android:text="TextView"
-            android:textSize="20dp"
+            android:textSize="15dp"
             android:textColor="@color/blackTextColor"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_when_label" />
+            app:layout_constraintStart_toEndOf="@+id/event_detail_when_label"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_title" />
 
         <TextView
             android:id="@+id/event_detail_where_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
-            android:textSize="15dp"
+            android:textSize="10dp"
             android:text="@string/event_details_where"
             android:textColor="@color/blackTextColor"
             app:layout_constraintStart_toStartOf="parent"
@@ -79,22 +66,40 @@
 
         <TextView
             android:id="@+id/event_detail_where"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="70dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
             android:text="TextView"
-            android:textSize="20dp"
             android:textColor="@color/blackTextColor"
+            android:textSize="15dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/event_detail_where_label"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_when" />
+
+        <TextView
+            android:id="@+id/event_detail_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:text="Details"
+            android:textColor="@color/blackTextColor"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toTopOf="@+id/event_confirm_button"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_where_label" />
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
 
         <Button
             android:id="@+id/event_confirm_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-            android:layout_marginTop="30dp"
+
             android:layout_marginEnd="50dp"
             android:background="@color/primaryDarkColor"
             android:text="@string/event_details_button_confirm"
@@ -102,7 +107,7 @@
             app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"
             app:layout_constraintEnd_toStartOf="@id/event_conversation"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_details" />
 
         <ImageButton
             android:id="@+id/event_conversation"
@@ -110,23 +115,24 @@
             android:layout_height="45dp"
             android:layout_marginEnd="50dp"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="15dp"
             android:scaleType="fitXY"
             android:background="@drawable/chat"
             app:layout_constraintBottom_toTopOf="@+id/event_detail_already_confirmed"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/event_confirm_button"
-            app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_details" />
 
 
         <TextView
             android:id="@+id/event_detail_already_confirmed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="40dp"
             android:text="Already confirmed by"
             android:textColor="@color/blackTextColor"
+            android:textSize="10dp"
             app:layout_constraintBottom_toTopOf="@+id/list_of_users_confirmed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/event_confirm_button" />

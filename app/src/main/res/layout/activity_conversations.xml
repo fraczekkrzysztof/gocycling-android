@@ -37,6 +37,7 @@
             android:textColor="@color/blackTextColor"
             android:hint="@string/prompt_msg"
             android:imeActionLabel="@string/action_send"
+            android:textSize="15sp"
             android:imeOptions="actionUnspecified"
             android:inputType="textCapSentences|textAutoCorrect"
             android:maxLines="1"

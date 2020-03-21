@@ -49,10 +49,10 @@ public class EventDetailActivity extends AppCompatActivity {
     TextView mTitle;
     TextView mWhere;
     TextView mWhen;
+    TextView mDetails;
     EventModel mEvent;
     List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
-    Button mDetailButton;
     ImageButton mConversationButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
@@ -67,14 +67,13 @@ public class EventDetailActivity extends AppCompatActivity {
         mTitle = findViewById(R.id.event_detail_title);
         mWhere = findViewById(R.id.event_detail_where);
         mWhen = findViewById(R.id.event_detail_when);
+        mDetails = findViewById(R.id.event_detail_details);
         mListView = findViewById(R.id.list_of_users_confirmed);
         mConfirmButton = findViewById(R.id.event_confirm_button);
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
         mConversationButton = findViewById(R.id.event_conversation);
         mConversationButton.setOnClickListener(conversationClickedListener);
         setDialogMessage();
-        mDetailButton = findViewById(R.id.event_details_button);
-        mDetailButton.setOnClickListener(detailsButtonClickedListener);
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         getSupportActionBar().setSubtitle("Events details");
@@ -111,7 +110,7 @@ public class EventDetailActivity extends AppCompatActivity {
         mTitle.setText(mEvent.getName());
         mWhen.setText(DateUtils.sdfWithTime.format(mEvent.getDateAndTime()));
         mWhere.setText(mEvent.getPlace());
-
+        mDetails.setText(mEvent.getDetails());
     }
 
     private void refreshData(String userUid, long eventId){
@@ -266,6 +265,7 @@ public class EventDetailActivity extends AppCompatActivity {
                 View view = super.getView(position, convertView, parent);
                 TextView text = (TextView) view.findViewById(android.R.id.text1);
                 text.setTextColor(Color.BLACK);
+                text.setTextSize(Float.parseFloat("15"));
                 return view;
             }
         };
