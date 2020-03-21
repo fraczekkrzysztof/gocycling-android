@@ -75,9 +75,9 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             public void onInitializationComplete(InitializationStatus initializationStatus) {
             }
         });
-        mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+//        mAdView = findViewById(R.id.adView);
+//        AdRequest adRequest = new AdRequest.Builder().build();
+//        mAdView.loadAd(adRequest);
         eventListSwipe = findViewById(R.id.event_list_swipe);
         eventListSwipe.setOnRefreshListener(onRefresListener);
         Toolbar mToolbar = findViewById(R.id.event_list_toolbar);
