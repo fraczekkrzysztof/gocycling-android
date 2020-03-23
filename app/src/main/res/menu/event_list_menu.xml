@@ -12,6 +12,9 @@
         <item
             android:id="@+id/my_confirmation_menu"
             android:title="My confirmations" />
+        <item
+            android:id="@+id/my_notification_menu"
+            android:title="Notifications" />
     </group>
     <item android:title="My account">
         <menu>
