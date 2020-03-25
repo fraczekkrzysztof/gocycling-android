@@ -27,6 +27,7 @@
             android:theme="@style/AppThemeNoActionBar" />
         <activity android:name=".eventdetails.EventDetailActivity" />
         <activity android:name=".myevents.MyEventsLists" />
+        <activity android:name=".notifications.NotificationLists"/>
         <activity android:name=".conversation.ConversationListActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"/>
         <meta-data

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="api_base_address">https://gocycling.herokuapp.com/</string>
-<!--    <string name="api_base_address">http://10.0.2.2:8080/</string>-->
+<!--    <string name="api_base_address">https://gocycling.herokuapp.com/</string>-->
+    <string name="api_base_address">http://10.0.2.2:8080/</string>
     <string name="api_event_address">api/events</string>
     <string name="api_event_current">api/events/search/findCurrent</string>
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
@@ -15,4 +15,7 @@
     <string name="api_event_user_confirmed">api/users/search/findUserConfirmedEvent</string>
     <string name="api_conversation">api/conversations</string>
     <string name="api_conversation_by_event_id">api/conversations/search/findByEventId</string>
+    <string name="api_notifications"></string>
+    <string name="api_notification_by_user_uid">api/notifications/search/findByUserUid</string>
+    <string name="api_notification_mark_as_read">api/custom/notifications/markAsRead</string>
 </resources>

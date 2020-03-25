@@ -5,6 +5,7 @@
     <string name="event_details_button_confirm">Confirm</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="check_details">Check details</string>
     <string name="ok">Yes</string>
     <string name="cancel">No</string>
     <string name="close">Close</string>
