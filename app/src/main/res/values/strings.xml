@@ -14,4 +14,6 @@
     <string name="quit_app_question">Close application?</string>
     <string name="action_send">Send</string>
     <string name="prompt_msg">Type a message</string>
+    <string name="permission_info">Disable battery saver options to get all notifications.</string>
+    <string name="open_app_setting">open app settings</string>
 </resources>

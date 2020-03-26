@@ -12,10 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -96,6 +100,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         toogle.syncState();
         createDialogForQuit();
         initRecyclerView();
+        showDialogForAppPermission();
         Log.d(TAG, "onCreate:  started.");
     }
 
@@ -286,5 +291,45 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     protected void onPostResume() {
         super.onPostResume();
         refreshData();
+    }
+
+    public void showDialogForAppPermission(){
+
+        final String SHARED_PREF_TAG = "PERMISSION INFO";
+        final String SHARED_PREF_DONT_SHOW = "DONT_SHOW_AGAIN";
+
+        if (getSharedPreferences(SHARED_PREF_TAG,Context.MODE_PRIVATE)
+                .getBoolean(SHARED_PREF_DONT_SHOW,false)){
+            return;
+        }
+        DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(EventListActivity.this);
+        builder.setTitle(R.string.permission_info);
+        String[] array = {"Don't show again"};
+        boolean[] checked = {false};
+        builder.setMultiChoiceItems(array, checked, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i, boolean b) {
+                SharedPreferences sharedPrefs = getApplicationContext().getSharedPreferences(SHARED_PREF_TAG, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putBoolean(SHARED_PREF_DONT_SHOW,b);
+                editor.commit();
+            }
+        });
+        builder.setPositiveButton("Open App setting", positiveAnswerListener);
+        builder.setNegativeButton(R.string.cancel, null);
+
+        builder.create().show();
+
     }
 }
