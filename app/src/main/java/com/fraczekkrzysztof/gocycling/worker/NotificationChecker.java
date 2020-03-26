@@ -30,6 +30,7 @@ public class NotificationChecker extends Worker {
     public NotificationChecker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         mNotificationHelper = new NotificationHelper(getApplicationContext());
+        Log.d(TAG, "NotificationChecker: created successfully");
     }
 
     @NonNull
@@ -42,8 +43,6 @@ public class NotificationChecker extends Worker {
             Log.e(TAG, "doWork: Error",e );
             return Result.failure();
         }
-
-
         return Result.success();
     }
 

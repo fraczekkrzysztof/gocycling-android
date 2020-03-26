@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -46,6 +48,7 @@ public class NotificationHelper extends ContextWrapper {
 
     public void sendHighPriorityNotifiction(String title, String body, String summary, Class activityName){
         Intent intent =  new Intent(this,activityName);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,NEW_INTENT_CODE,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notifiacation = new NotificationCompat.Builder(this,CHANNEL_ID)
                 .setContentTitle(title)
@@ -55,6 +58,7 @@ public class NotificationHelper extends ContextWrapper {
                 .setStyle(new NotificationCompat.BigTextStyle().setSummaryText(summary).setBigContentTitle(title).bigText(body))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
+                .setSound(alarmSound)
                 .build();
 
         NotificationManagerCompat.from(this).notify(new Random().nextInt(),notifiacation);
