@@ -61,6 +61,7 @@ public class NotificationLists extends AppCompatActivity {
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_notification_by_user_uid);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
         Log.d(TAG, "getNotifications: created request" + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override

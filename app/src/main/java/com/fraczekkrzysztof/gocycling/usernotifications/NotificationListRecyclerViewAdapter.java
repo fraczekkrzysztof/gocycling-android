@@ -65,8 +65,11 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
         holder.textTitle.setText(mNotificationList.get(position).getTitle());
 
         if (!mNotificationList.get(position).isRead()){
-            holder.textDate.setTypeface(holder.textDate.getTypeface(), Typeface.BOLD);
-            holder.textTitle.setTypeface(holder.textTitle.getTypeface(),Typeface.BOLD);
+            holder.textDate.setTypeface(null, Typeface.BOLD);
+            holder.textTitle.setTypeface(null,Typeface.BOLD);
+        } else {
+            holder.textDate.setTypeface(null, Typeface.NORMAL);
+            holder.textTitle.setTypeface(null,Typeface.NORMAL);
         }
 
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
@@ -88,14 +91,19 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
             public void onClick(View view) {
                     Log.d(TAG, "onClick: clicked on " + mNotificationList.get(position).getId());
                     if (!mNotificationList.get(position).isRead()){
-                        mNotificationList.get(position).setRead(true);
+                        Log.d(TAG, "onClick: " + position);
+                        markAsReadOnList(position);
                         markAsRead(mNotificationList.get(position).getId());
-                        notifyItemChanged(position);
                     }
                     mDialog.show();
             }
         });
 
+    }
+
+    private void markAsReadOnList(int position){
+        mNotificationList.get(position).setRead(true);
+        notifyItemChanged(position);
     }
 
     @Override
