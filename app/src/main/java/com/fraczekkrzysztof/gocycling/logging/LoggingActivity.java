@@ -7,17 +7,21 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.worker.NotificationChecker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -50,6 +54,14 @@ public class LoggingActivity extends AppCompatActivity {
             Log.d(TAG, "onCreate: user not logged. Start logging.");
             startLoggingIn();
         }
+
+    }
+
+    private void createPeriodicWorkedForNotificationCheck(){
+        PeriodicWorkRequest pwr = new PeriodicWorkRequest.Builder(
+                NotificationChecker.class,15, TimeUnit.SECONDS)
+                .build();
+        WorkManager.getInstance(LoggingActivity.this).enqueue(pwr);
     }
 
     private void startLoggingIn(){
@@ -69,6 +81,7 @@ public class LoggingActivity extends AppCompatActivity {
     }
 
     private void startApp(){
+        createPeriodicWorkedForNotificationCheck();
         Intent startIntent =  new Intent(getApplicationContext(), EventListActivity.class);
         startActivity(startIntent);
     }

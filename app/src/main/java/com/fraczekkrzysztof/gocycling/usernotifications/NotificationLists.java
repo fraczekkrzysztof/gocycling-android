@@ -1,6 +1,5 @@
-package com.fraczekkrzysztof.gocycling.notifications;
+package com.fraczekkrzysztof.gocycling.usernotifications;
 
-import android.app.Notification;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -12,7 +11,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.NotificationModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;

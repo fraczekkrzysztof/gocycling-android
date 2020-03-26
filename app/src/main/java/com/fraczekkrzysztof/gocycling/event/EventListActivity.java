@@ -20,22 +20,19 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
-import com.fraczekkrzysztof.gocycling.notifications.NotificationLists;
-import com.google.android.gms.ads.AdRequest;
+import com.fraczekkrzysztof.gocycling.usernotifications.NotificationLists;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
@@ -47,7 +44,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
