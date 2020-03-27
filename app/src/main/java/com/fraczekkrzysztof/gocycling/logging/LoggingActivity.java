@@ -61,7 +61,7 @@ public class LoggingActivity extends AppCompatActivity {
 
     private void createPeriodicWorkedForNotificationCheck(){
         PeriodicWorkRequest pwr = new PeriodicWorkRequest.Builder(
-                NotificationChecker.class,30, TimeUnit.SECONDS)
+                NotificationChecker.class,15, TimeUnit.MINUTES)
                 .build();
         WorkManager.getInstance(LoggingActivity.this).enqueue(pwr);
 

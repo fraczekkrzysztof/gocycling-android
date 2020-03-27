@@ -51,7 +51,7 @@ public class NotificationChecker2 extends Service {
                     while(true){
                         tools.getMaxNotificationIdForUser();
                         Log.d(TAG, "Successfully finished sync job");
-                        Thread.currentThread().sleep(60000);
+                        Thread.currentThread().sleep(120000);
                     }
                 } catch (Exception e){
                     e.printStackTrace();
