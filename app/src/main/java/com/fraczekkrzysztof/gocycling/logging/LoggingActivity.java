@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -16,6 +17,7 @@ import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
 import com.fraczekkrzysztof.gocycling.worker.NotificationChecker;
+import com.fraczekkrzysztof.gocycling.worker.NotificationChecker2;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -62,6 +64,9 @@ public class LoggingActivity extends AppCompatActivity {
                 NotificationChecker.class,30, TimeUnit.SECONDS)
                 .build();
         WorkManager.getInstance(LoggingActivity.this).enqueue(pwr);
+
+        Intent serviceIntent = new Intent(this, NotificationChecker2.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
     }
 
     private void startLoggingIn(){

@@ -12,6 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service android:name=".worker.NotificationChecker2" />
         <activity android:name=".myaccount.MyAccount"></activity>
         <activity android:name=".newevent.NewEventActivity" />
         <activity android:name=".myconfirmations.MyConfirmationsLists" />

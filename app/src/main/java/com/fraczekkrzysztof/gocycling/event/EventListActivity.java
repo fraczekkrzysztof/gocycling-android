@@ -23,6 +23,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -127,8 +128,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                finishAffinity();
-                System.exit(0);
+                moveTaskToBack(true);
+//                this code is used to shut down app completely
+//                finishAffinity();
+//                System.exit(0);
             }
         };
 
@@ -314,7 +317,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(EventListActivity.this);
-        builder.setTitle(R.string.permission_info);
+        builder.setCustomTitle(getLayoutInflater().inflate(R.layout.custom_dialog_title,null));
         String[] array = {"Don't show again"};
         boolean[] checked = {false};
         builder.setMultiChoiceItems(array, checked, new DialogInterface.OnMultiChoiceClickListener() {
@@ -327,7 +330,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             }
         });
         builder.setPositiveButton("Open App setting", positiveAnswerListener);
-        builder.setNegativeButton(R.string.cancel, null);
+        builder.setNegativeButton(R.string.close, null);
 
         builder.create().show();
 
