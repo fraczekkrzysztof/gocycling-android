@@ -278,7 +278,7 @@ public class NewEventActivity extends AppCompatActivity {
     private void startActivityForMapResult(){
         Places.initialize(getApplicationContext(),getString(R.string.google_maps_key));
         PlacesClient placesClient = Places.createClient(getApplicationContext());
-        List<Place.Field> fields = Arrays.asList(Place.Field.ID,Place.Field.NAME,Place.Field.LAT_LNG);
+        List<Place.Field> fields = Arrays.asList(Place.Field.ID,Place.Field.NAME,Place.Field.ADDRESS,Place.Field.LAT_LNG);
         Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN,fields).build(NewEventActivity.this);
         startActivityForResult(intent,123);
     }
