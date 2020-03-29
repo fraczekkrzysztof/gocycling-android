@@ -131,6 +131,8 @@ public class NewEventActivity extends AppCompatActivity {
         mEditTextPlace.setText(event.getPlace());
         mEditTextDate.setText(DateUtils.sdfWithTime.format(event.getDateAndTime()));
         mEditTextDetails.setText(event.getDetails());
+        latitude = event.getLatitude();
+        longtitude = event.getLongitude();
     }
 
     private void showDateTimeDialog(final EditText date_time_in) {
@@ -199,6 +201,8 @@ public class NewEventActivity extends AppCompatActivity {
             JSONObject params = new JSONObject();
             params.put("name", mEditTextName.getText().toString());
             params.put("place", mEditTextPlace.getText().toString());
+            params.put("latitude",latitude);
+            params.put("longitude",longtitude);
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
@@ -231,6 +235,8 @@ public class NewEventActivity extends AppCompatActivity {
             JSONObject params = new JSONObject();
             params.put("name", mEditTextName.getText().toString());
             params.put("place", mEditTextPlace.getText().toString());
+            params.put("latitude",latitude);
+            params.put("longitude",longtitude);
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
