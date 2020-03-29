@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.apiutils.SortTypes;
@@ -53,10 +54,12 @@ public class EventDetailActivity extends AppCompatActivity {
     EventModel mEvent;
     List<String> mUserConfirmed = new ArrayList<>();
     Button mConfirmButton;
+    ImageButton mLocationButton;
     ImageButton mConversationButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
     AlertDialog mDialog;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,6 +76,8 @@ public class EventDetailActivity extends AppCompatActivity {
         mConfirmButton.setOnClickListener(confirmedButtonClickedListener);
         mConversationButton = findViewById(R.id.event_conversation);
         mConversationButton.setOnClickListener(conversationClickedListener);
+        mLocationButton = findViewById(R.id.event_detail_show_location);
+        mLocationButton.setOnClickListener(showLocationButtonListener);
         setDialogMessage();
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
@@ -182,6 +187,14 @@ public class EventDetailActivity extends AppCompatActivity {
         });
     }
 
+    private View.OnClickListener showLocationButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Intent showLocation = new Intent(EventDetailActivity.this, MapsActivity.class);
+            showLocation.putExtra("Event",mEvent);
+            startActivity(showLocation);
+        }
+    };
     private View.OnClickListener conversationClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
