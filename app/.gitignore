@@ -1,6 +1,3 @@
 /build
-/src/main/res/values/strings_api_secrets.xml
-/src/debug/res/values/google_map_api.xml
-/src/release/res/values/google_map_api.xml
-/google-services.json
+
 
