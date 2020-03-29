@@ -308,10 +308,11 @@ public class NewEventActivity extends AppCompatActivity {
                         @Override
                         public void onMapReady(final GoogleMap googleMap) {
                             LatLng posisiabsen = place.getLatLng(); ////your lat lng
-                            googleMap.addMarker(new MarkerOptions().position(posisiabsen).title(place.getName() + " " + place.getAddress()));
-                            googleMap.moveCamera(CameraUpdateFactory.newLatLng(posisiabsen));
+                            googleMap.addMarker(new MarkerOptions().position(posisiabsen).title(place.getAddress()));
+                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(),16.0f));
                             googleMap.getUiSettings().setZoomControlsEnabled(true);
-                            googleMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+//                            googleMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+
                         }
                     });
 
@@ -342,7 +343,7 @@ public class NewEventActivity extends AppCompatActivity {
     private void setFieldForPlace(Place place){
         latitude = place.getLatLng().latitude;
         longtitude = place.getLatLng().longitude;
-        mEditTextPlace.setText(place.getName() + " " + place.getAddress());
+        mEditTextPlace.setText(place.getAddress());
     }
 
 
