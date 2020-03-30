@@ -155,10 +155,25 @@ public class ConversationListActivity extends AppCompatActivity{
         @Override
         public void onClick(View view) {
             Log.d(TAG, "onClick: sending message");
+            if (checkMessageFiels(mMessage)){
+                saveConversation(view,mMessage.getText().toString());
+            }
 
-            saveConversation(view,mMessage.getText().toString());
         }
     };
+
+    private boolean checkMessageFiels(EditText fieldToCheck){
+        String text = fieldToCheck.getText().toString();
+        if (text != null && text.length() != 0){
+            text = text.trim();
+            if (text != null && text.length() != 0){
+                return true;
+            }
+        }
+        Toast.makeText(ConversationListActivity.this,"Enter the message", Toast.LENGTH_SHORT).show();
+        fieldToCheck.setText("");
+        return false;
+    }
 
     private void hideSoftInput(View view){
         InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
