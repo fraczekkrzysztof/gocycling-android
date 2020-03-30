@@ -18,6 +18,8 @@ public class EventModel implements Serializable {
     private static final String TAG = "EventModel";
     private String name;
     private String place;
+    private double latitude;
+    private double longitude;
     private Date dateAndTime;
     private String details;
     private String createdBy;
@@ -80,6 +82,22 @@ public class EventModel implements Serializable {
         this.canceled = canceled;
     }
 
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
     public static List<EventModel> fromJson(JSONObject jsonObject) {
         Log.d(TAG, "fromJson: parsing response for receiving list of events");
         List<EventModel> eventList = new ArrayList<>();
@@ -91,6 +109,8 @@ public class EventModel implements Serializable {
                 eventModel.setId(eventObject.getLong("id"));
                 eventModel.setName(eventObject.getString("name"));
                 eventModel.setPlace(eventObject.getString("place"));
+                eventModel.setLatitude(eventObject.getDouble("latitude"));
+                eventModel.setLongitude(eventObject.getDouble("longitude"));
                 eventModel.setDetails(eventObject.getString("details"));
                 eventModel.setCreatedBy(eventObject.getString("createdBy"));
                 eventModel.setCanceled(eventObject.getBoolean("canceled"));

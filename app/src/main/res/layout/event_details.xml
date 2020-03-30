@@ -74,9 +74,22 @@
             android:text="TextView"
             android:textColor="@color/blackTextColor"
             android:textSize="15dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/event_detail_show_location"
             app:layout_constraintStart_toEndOf="@+id/event_detail_where_label"
             app:layout_constraintTop_toBottomOf="@+id/event_detail_when" />
+
+        <ImageButton
+            android:id="@+id/event_detail_show_location"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="35dp"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_marginBottom="15dp"
+            android:scaleType="fitXY"
+            android:background="@drawable/mappin"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_when"
+            app:layout_constraintEnd_toEndOf="parent"
+             />
 
         <TextView
             android:id="@+id/event_detail_details"
@@ -113,7 +126,7 @@
             android:id="@+id/event_conversation"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_marginEnd="50dp"
+            android:layout_marginEnd="35dp"
             style="?android:attr/borderlessButtonStyle"
             android:layout_marginBottom="15dp"
             android:scaleType="fitXY"
