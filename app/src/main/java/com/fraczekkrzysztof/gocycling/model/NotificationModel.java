@@ -19,6 +19,7 @@ public class NotificationModel {
     private String content;
     private Date created;
     private boolean read;
+    private long eventId;
 
     public long getId() {
         return id;
@@ -66,6 +67,14 @@ public class NotificationModel {
 
     public void setRead(boolean read) {
         this.read = read;
+    }
+
+    public long getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(long eventId) {
+        this.eventId = eventId;
     }
 
     public static List<NotificationModel> fromJson(JSONObject jsonObject) {

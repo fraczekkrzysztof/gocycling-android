@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -17,11 +18,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
+import com.fraczekkrzysztof.gocycling.event.EventListActivity;
+import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
+import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.NotificationModel;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,19 +79,6 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
             holder.textTitle.setTypeface(null,Typeface.NORMAL);
         }
 
-        DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Log.d(TAG, "onClick: redirect to confirmation ");
-                mContext.startActivity(new Intent(mContext, MyConfirmationsLists.class));
-            }
-        };
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext).setMessage(mNotificationList.get(position).getContent());
-        builder.setPositiveButton(R.string.check_details, positiveAnswerListener);
-        builder.setNegativeButton(R.string.close,null);
-
-        mDialog = builder.create();
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,9 +89,28 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
                         markAsReadOnList(position);
                         markAsRead(mNotificationList.get(position).getId());
                     }
-                    mDialog.show();
+                    buildAndShowDialog(position);
             }
         });
+
+    }
+
+    private void buildAndShowDialog(final int position){
+
+        DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.d(TAG, "onClick: redirect to confirmation ");
+                getEventDetailsAndStartActivity(mNotificationList.get(position).getId());
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext).setMessage(mNotificationList.get(position).getContent());
+        builder.setPositiveButton(R.string.check_details, positiveAnswerListener);
+        builder.setNegativeButton(R.string.close,null);
+
+        mDialog = builder.create();
+        mDialog.show();
 
     }
 
@@ -147,5 +160,59 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
                 });
     }
 
+    private void getEventDetailsAndStartActivity(long id){
+        setParentRefreshing(true);
+        Log.d(TAG, "getSingleEvent: called");
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
+        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_event_by_notification_id);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "notificationId=" + id;
+        Log.d(TAG, "getSingleEvent: created request " + requestAddress);
+        client.get(requestAddress, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d(TAG, "onSuccess: response successfully received");
+                List<EventModel> listEvents = EventModel.fromJson(response);
+                setParentRefreshing(false);
+                startActivityForSingleEvent(listEvents.get(0));
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                Toast.makeText(mContext,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"Error during retrieving single event", throwable);
+                if (errorResponse != null){
+                    Log.d(TAG, errorResponse.toString());
+                }
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode,headers,responseString,throwable);
+                Toast.makeText(mContext,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"Error during retrieving single event", throwable);
+                if (responseString != null){
+                    Log.d(TAG, responseString);
+                }
+                setParentRefreshing(false);
+            }
+        });
+    }
+
+    private void startActivityForSingleEvent(EventModel event){
+        if (event.isCanceled()){
+            Toast.makeText(mContext,"Event is canceled. You're not able to view details",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent eventDetails = new Intent(mContext, EventDetailActivity.class);
+        eventDetails.putExtra("Event", event);
+        mContext.startActivity(eventDetails);
+    }
+
+    private void setParentRefreshing(boolean refreshing){
+        ((NotificationLists)mContext).setRefreshing(refreshing);
+    }
 
 }

@@ -139,4 +139,8 @@ public class NotificationLists extends AppCompatActivity {
         super.onPostResume();
         refreshData();
     }
+
+    void setRefreshing(boolean refreshing){
+        mNotificationListSwype.setRefreshing(refreshing);
+    }
 }
