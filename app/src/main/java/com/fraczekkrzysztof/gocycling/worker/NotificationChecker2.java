@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.fraczekkrzysztof.gocycling.R;
 
@@ -82,6 +83,14 @@ public class NotificationChecker2 extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Intent serviceIntent = new Intent(getApplicationContext(), NotificationChecker2.class);
+        serviceIntent.setPackage(getPackageName());
+        startService(serviceIntent);
+        super.onTaskRemoved(rootIntent);
     }
 
     @Nullable
