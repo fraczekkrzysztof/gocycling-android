@@ -70,7 +70,7 @@ public class ConversationListActivity extends AppCompatActivity{
         mRecyclerView.addItemDecoration(divider);
     }
 
-    private void getConversation(){
+    private void getConversation(final boolean scrollToLast){
         conversationListSwipe.setRefreshing(true);
         Log.d(TAG, "getConversation: called");
         AsyncHttpClient client = new AsyncHttpClient();
@@ -86,6 +86,9 @@ public class ConversationListActivity extends AppCompatActivity{
                 Log.d(TAG, "onSuccess: response successfully received");
                 List<ConversationModel> listConversation = ConversationModel.fromJson(response);
                 mAdapter.addConversation(listConversation);
+                if (scrollToLast){
+                    mRecyclerView.scrollToPosition(mAdapter.getItemCount()-1);
+                }
                 conversationListSwipe.setRefreshing(false);
             }
 
@@ -130,16 +133,16 @@ public class ConversationListActivity extends AppCompatActivity{
                     mMessage.setText(null);
                     hideSoftInput(view);
                     Toast.makeText(getBaseContext(),"Successfully create conversation",Toast.LENGTH_SHORT).show();
-                    refreshData();
+                    refreshData(true);
                 }
             });
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-    private void refreshData(){
+    private void refreshData(boolean scrollToLast){
         mAdapter.clearEvents();
-        getConversation();
+        getConversation(scrollToLast);
     }
 
 
@@ -147,7 +150,7 @@ public class ConversationListActivity extends AppCompatActivity{
         @Override
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
-            refreshData();
+            refreshData(false);
         }
     };
 
@@ -185,6 +188,6 @@ public class ConversationListActivity extends AppCompatActivity{
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        refreshData();
+        refreshData(true);
     }
 }
