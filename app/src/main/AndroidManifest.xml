@@ -38,7 +38,17 @@
 
         <service android:name=".worker.NotificationChecker2" />
 
-        <activity android:name=".myaccount.MyAccount" />
+        <activity android:name=".myaccount.MyAccount">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="gocyclingapp"
+                    android:path="/callback"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
         <activity android:name=".newevent.NewEventActivity" />
         <activity android:name=".myconfirmations.MyConfirmationsLists" />
         <activity android:name=".logging.LoggingActivity">

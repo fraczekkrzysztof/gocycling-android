@@ -20,4 +20,8 @@
     <string name="api_notification_by_user_uid">api/notifications/search/findByUserUid</string>
     <string name="api_notification_mark_as_read">api/custom/notifications/markAsRead</string>
     <string name="api_notification_max_id_for_user">api/custom/notifications/findMaxNotificationIdForUser</string>
+    <string name="api_external_app_list">api/custom/externalapps/list</string>
+    <string name="api_strava_authorization_link">api/strava/authorizationLink</string>
+    <string name="api_strava_process_access_code">api/strava/accessToken</string>
+    <string name="api_strava_deauthorize">api/strava/deauthorize</string>
 </resources>
