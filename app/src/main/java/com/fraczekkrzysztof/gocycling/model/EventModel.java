@@ -25,6 +25,7 @@ public class EventModel implements Serializable {
     private String createdBy;
     private boolean canceled;
     private long id;
+    private String routeLink;
 
     public String getName() {
         return name;
@@ -98,6 +99,14 @@ public class EventModel implements Serializable {
         this.longitude = longitude;
     }
 
+    public String getRouteLink() {
+        return routeLink;
+    }
+
+    public void setRouteLink(String routeLink) {
+        this.routeLink = routeLink;
+    }
+
     public static List<EventModel> fromJson(JSONObject jsonObject) {
         Log.d(TAG, "fromJson: parsing response for receiving list of events");
         List<EventModel> eventList = new ArrayList<>();
@@ -115,6 +124,7 @@ public class EventModel implements Serializable {
                 eventModel.setCreatedBy(eventObject.getString("createdBy"));
                 eventModel.setCanceled(eventObject.getBoolean("canceled"));
                 eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
+                eventModel.setRouteLink(eventObject.getString("routeLink"));
                 eventList.add(eventModel);
             }
         } catch (Exception e) {

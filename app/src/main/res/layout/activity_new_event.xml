@@ -54,10 +54,40 @@
             android:layout_marginTop="10dp"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
-            app:layout_constraintBottom_toTopOf="@+id/new_events_detail"
+            app:layout_constraintBottom_toTopOf="@+id/new_event_route"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/new_event_place" />
+
+        <EditText
+            android:id="@+id/new_event_route"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="none"
+            android:hint="Link to external route"
+            android:textSize="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="5dp"
+            app:layout_constraintBottom_toTopOf="@+id/new_events_detail"
+            app:layout_constraintEnd_toStartOf="@+id/new_event_route_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/new_event_date" />
+
+        <ImageButton
+            android:id="@+id/new_event_route_button"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="30dp"
+            style="?android:attr/borderlessButtonStyle"
+
+            android:scaleType="fitXY"
+            android:background="@drawable/gps"
+            app:layout_constraintTop_toBottomOf="@+id/new_event_date"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/new_events_detail"
+            />
 
         <EditText
             android:id="@+id/new_events_detail"
@@ -67,15 +97,16 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="10dp"
-            android:textSize="15dp"
-            android:hint="Details"
             android:ems="10"
             android:gravity="start|top"
+            android:hint="Details"
             android:inputType="textMultiLine"
+            android:textSize="15dp"
             app:layout_constraintBottom_toTopOf="@+id/new_event_create"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/new_event_date" />
+            app:layout_constraintTop_toBottomOf="@+id/new_event_route" />
 
         <Button
             android:id="@+id/new_event_create"

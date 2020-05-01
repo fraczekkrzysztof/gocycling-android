@@ -8,6 +8,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -17,16 +18,21 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.model.RouteModel;
 import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -43,12 +49,16 @@ import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -60,10 +70,13 @@ public class NewEventActivity extends AppCompatActivity {
     private EditText mEditTextName;
     private EditText mEditTextPlace;
     private EditText mEditTextDate;
+    private EditText mEditTextRoute;
     private EditText mEditTextDetails;
+    private ImageButton mRouteButton;
     private Button mAddButton;
     private EventModel mEventToEdit;
     private String mode;
+    AlertDialog mDialog;
     private double latitude = -999;
     private double longtitude = -999;
 
@@ -73,10 +86,13 @@ public class NewEventActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_event);
         mAddButton = findViewById(R.id.new_event_create);
         mAddButton.setOnClickListener(addButtonListener);
+        mRouteButton = findViewById(R.id.new_event_route_button);
+        mRouteButton.setOnClickListener(routeClickedListener);
         mEditTextName = findViewById(R.id.new_event_name);
         mEditTextPlace = findViewById(R.id.new_event_place);
         mEditTextDate = findViewById(R.id.new_event_date);
         mEditTextDetails = findViewById(R.id.new_events_detail);
+        mEditTextRoute = findViewById(R.id.new_event_route);
 
         mEditTextPlace.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -118,6 +134,7 @@ public class NewEventActivity extends AppCompatActivity {
         getSupportActionBar().setSubtitle("New event");
     }
 
+
     private void hideSoftInput(View view){
         InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -131,6 +148,7 @@ public class NewEventActivity extends AppCompatActivity {
         mEditTextPlace.setText(event.getPlace());
         mEditTextDate.setText(DateUtils.sdfWithTime.format(event.getDateAndTime()));
         mEditTextDetails.setText(event.getDetails());
+        mEditTextRoute.setText(event.getRouteLink());
         latitude = event.getLatitude();
         longtitude = event.getLongitude();
     }
@@ -204,6 +222,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("latitude",latitude);
             params.put("longitude",longtitude);
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+            params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
             Log.d(TAG, "onClick: " + params.toString());
@@ -238,6 +257,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("latitude",latitude);
             params.put("longitude",longtitude);
             params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+            params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
             Log.d(TAG, "onClick: " + params.toString());
@@ -350,6 +370,52 @@ public class NewEventActivity extends AppCompatActivity {
         latitude = place.getLatLng().latitude;
         longtitude = place.getLatLng().longitude;
         mEditTextPlace.setText(place.getAddress());
+    }
+
+    private View.OnClickListener routeClickedListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            getListOfRoutes();
+        }
+    };
+
+    private void getListOfRoutes(){
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_external_routes_list);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Log.d(TAG, "getListOfRoutes: request " + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                Log.d(TAG, "onSuccess: successfuly received list of routes" );
+                showDialogForResponse(RouteModel.fromJsonArray(response));
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e(TAG, "onFailure: error diring receiving list of routes", throwable);
+                if (errorResponse != null){
+                    Log.e(TAG, "onFailure: " + errorResponse);
+                }
+                Toast.makeText(NewEventActivity.this,"Error during receiving list of routes",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showDialogForResponse(final List<RouteModel> listOfRoutes){
+        AlertDialog.Builder builder = new AlertDialog.Builder(NewEventActivity.this);
+        builder.setNegativeButton(R.string.cancel, null);
+        RouteAdapter adapter = new RouteAdapter(getApplicationContext(),listOfRoutes);
+        builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                mEditTextRoute.setText(listOfRoutes.get(i).getLink());
+                mDialog.dismiss();
+            }
+        });
+        mDialog = builder.create();
+        mDialog.show();
     }
 
 
