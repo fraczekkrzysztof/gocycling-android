@@ -2,10 +2,12 @@ package com.fraczekkrzysztof.gocycling.eventdetails;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -56,6 +58,7 @@ public class EventDetailActivity extends AppCompatActivity {
     Button mConfirmButton;
     ImageButton mLocationButton;
     ImageButton mConversationButton;
+    ImageButton mRouteButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
     AlertDialog mDialog;
@@ -78,12 +81,20 @@ public class EventDetailActivity extends AppCompatActivity {
         mConversationButton.setOnClickListener(conversationClickedListener);
         mLocationButton = findViewById(R.id.event_detail_show_location);
         mLocationButton.setOnClickListener(showLocationButtonListener);
+        mRouteButton = findViewById(R.id.event_detail_show_route);
+        setVisibleOfRouteButton();
+        mRouteButton.setOnClickListener(showRouteClickedListener);
         setDialogMessage();
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         getSupportActionBar().setSubtitle("Events details");
     }
 
+    private void setVisibleOfRouteButton(){
+        if (mEvent.getRouteLink() == null || mEvent.getRouteLink() == ""){
+            mRouteButton.setVisibility(View.INVISIBLE);
+        }
+    }
     private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
         public void onRefresh() {
@@ -316,4 +327,16 @@ public class EventDetailActivity extends AppCompatActivity {
         }
         return id;
     }
+
+    private View.OnClickListener showRouteClickedListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (URLUtil.isValidUrl(mEvent.getRouteLink())){
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mEvent.getRouteLink()));
+                startActivity(intent);
+            } else {
+                Toast.makeText(EventDetailActivity.this,"Provided link is not viliad!",Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 }

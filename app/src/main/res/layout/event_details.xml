@@ -93,19 +93,32 @@
 
         <TextView
             android:id="@+id/event_detail_details"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="30dp"
             android:layout_marginBottom="20dp"
             android:text="Details"
             android:textColor="@color/blackTextColor"
             android:textSize="15dp"
             app:layout_constraintBottom_toTopOf="@+id/event_confirm_button"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/event_detail_show_route"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/event_detail_where" />
+
+        <ImageButton
+            android:id="@+id/event_detail_show_route"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="35dp"
+            style="?android:attr/borderlessButtonStyle"
+           android:layout_marginTop="15dp"
+            android:scaleType="fitXY"
+            android:background="@drawable/gps"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_where"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
 
         <Button
             android:id="@+id/event_confirm_button"
