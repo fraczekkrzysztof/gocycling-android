@@ -91,6 +91,7 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
         builder.setPositiveButton(R.string.ok, positiveAnswerListener);
         builder.setNegativeButton(R.string.cancel, negativeAnswerListener);
 
+
         mDialog = builder.create();
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
