@@ -267,7 +267,7 @@ public class MyAccount extends AppCompatActivity {
         try {
             String code = uri.getQueryParameter("code");
             if (code != null){
-                mSwipeRefreshLayout.setRefreshing(true);
+                Toast.makeText(MyAccount.this,"Access code "+ code,Toast.LENGTH_LONG).show();
                 AsyncHttpClient client = new AsyncHttpClient();
                 client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
                 String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_strava_process_access_code);
@@ -289,8 +289,10 @@ public class MyAccount extends AppCompatActivity {
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                         Log.e(TAG, "onFailure: Error during authorizing strava!", error);
                         String errorRespone = new String(responseBody);
+                        Toast.makeText(MyAccount.this,"Error during connecting with Strava!",Toast.LENGTH_SHORT).show();
                         if (errorRespone != null && errorRespone != ""){
                             Log.e(TAG, "onFailure: " + errorRespone);
+//                            Toast.makeText(MyAccount.this,errorRespone,Toast.LENGTH_SHORT).show();
                         }
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
@@ -339,10 +341,19 @@ public class MyAccount extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        refreshData();
         Uri uri = getIntent().getData();
-        if (uri != null && uri.toString().startsWith(getResources().getString(R.string.redirect_uri_strava))){
-            processAccessCode(uri);
+        if (uri != null){
+            if (uri.toString().startsWith(getResources().getString(R.string.redirect_uri_strava))){
+                afterReturnFromSatrava(uri);
+                return;
+            }
         }
+        refreshData();
+    }
+
+    private void afterReturnFromSatrava(Uri uri){
+        mSwipeRefreshLayout.setRefreshing(true);
+        getUserInfo(FirebaseAuth.getInstance().getCurrentUser());
+        processAccessCode(uri);
     }
 }

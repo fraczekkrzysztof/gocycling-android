@@ -44,7 +44,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:host="gocyclingapp"
+                    android:host="gocyclingapp.com"
                     android:path="/callback"
                     android:scheme="https" />
             </intent-filter>
