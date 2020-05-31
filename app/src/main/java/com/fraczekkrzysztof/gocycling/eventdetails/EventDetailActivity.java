@@ -49,6 +49,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "EventDetailActivity";
     private long confirmationId = -1;
+    TextView mWho;
     TextView mTitle;
     TextView mWhere;
     TextView mWhen;
@@ -71,6 +72,7 @@ public class EventDetailActivity extends AppCompatActivity {
         setContentView(R.layout.event_details);
         mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         mTitle = findViewById(R.id.event_detail_title);
+        mWho = findViewById(R.id.event_detail_who);
         mWhere = findViewById(R.id.event_detail_where);
         mWhen = findViewById(R.id.event_detail_when);
         mDetails = findViewById(R.id.event_detail_details);
@@ -131,6 +133,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
     private void refreshData(String userUid, long eventId){
         mSwipeRefreshLayout.setRefreshing(true);
+        getCreatorUserName();
         getInformationAboutUserConfirmation(userUid,eventId);
         getConfirmedUser();
 
@@ -194,6 +197,30 @@ public class EventDetailActivity extends AppCompatActivity {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 mSwipeRefreshLayout.setRefreshing(false);
                 Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
+            }
+        });
+    }
+
+    private void getCreatorUserName(){
+        Log.d(TAG, "getCreatorUserName: called");
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+        requestAddress = requestAddress + "/" + mEvent.getCreatedBy();
+        Log.d(TAG, "getCreatorUserName: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                UserModel creator = UserModel.fromJsonUser(response,false);
+                mWho.setText(creator.getName());
+                Log.d(TAG, "onSuccess: Successfully retrieved user who create event");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                Log.e(TAG, "onFailure: There is an error while retrieving user who create event",throwable);
             }
         });
     }
