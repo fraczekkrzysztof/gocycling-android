@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">GoCycling</string>
+    <string name="event_details_who">Who</string>
     <string name="event_details_when">When</string>
     <string name="event_details_where">Where</string>
     <string name="event_details_button_confirm">Confirm</string>
