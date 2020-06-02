@@ -31,6 +31,7 @@ import android.widget.Toast;
 import com.firebase.ui.auth.AuthUI;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
+import com.fraczekkrzysztof.gocycling.clubs.ClubListActivity;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
@@ -283,6 +284,10 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             case R.id.my_notification_menu:
                 Intent intent5 = new Intent(getApplicationContext(), NotificationLists.class);
                 startActivity(intent5);
+                break;
+            case R.id.club_list_menu:
+                Intent intent6 = new Intent(getApplicationContext(), ClubListActivity.class);
+                startActivity(intent6);
                 break;
         }
         menuItem.setChecked(false);

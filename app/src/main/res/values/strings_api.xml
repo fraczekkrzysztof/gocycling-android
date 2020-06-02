@@ -25,4 +25,5 @@
     <string name="api_strava_process_access_code">api/strava/accessToken</string>
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
     <string name="api_external_routes_list">api/custom/externalroutes/list</string>
+    <string name="api_clubs_list">api/clubs</string>
 </resources>

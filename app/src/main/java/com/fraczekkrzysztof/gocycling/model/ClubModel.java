@@ -110,4 +110,16 @@ public class ClubModel {
         }
         return listOfClubs;
     }
+
+    public static int getTotalPageFromJson(JSONObject jsonObject){
+        int totalPage = 0;
+        try{
+            totalPage = jsonObject.getJSONObject("page").getInt("totalPages");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "fromJson: total number of pages " + totalPage );
+        return totalPage;
+    }
 }

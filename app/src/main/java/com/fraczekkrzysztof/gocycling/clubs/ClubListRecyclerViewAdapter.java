@@ -46,7 +46,7 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
         notifyDataSetChanged();
     }
 
-    public void clearEvents(){
+    public void clearClubs(){
         mClubList.clear();
     }
 
@@ -66,7 +66,7 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
         holder.textName.setText(mClubList.get(position).getName());
-
+        holder.textLocation.setText(mClubList.get(position).getLocation());
     }
 
     @Override
@@ -77,11 +77,12 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
     public class ViewHolder extends RecyclerView.ViewHolder{
 
         TextView textName;
+        TextView textLocation;
         ConstraintLayout parentLayout;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textName = itemView.findViewById(R.id.club_list_name_item);
-
+            textLocation = itemView.findViewById(R.id.club_list_location_item);
             parentLayout = itemView.findViewById(R.id.single_row_club_item);
         }
     }
