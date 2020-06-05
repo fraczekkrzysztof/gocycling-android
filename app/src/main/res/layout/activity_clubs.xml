@@ -45,8 +45,8 @@
         android:backgroundTint="@android:color/transparent"
         android:elevation="0dp"
         app:elevation="0dp"
-        app:srcCompat="@drawable/plus"
-        app:maxImageSize="49dp"/>
+        app:srcCompat="@drawable/add64"
+        app:maxImageSize="56dp"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.fraczekkrzysztof.gocycling.clubs;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,7 +14,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
+import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.newclub.NewClubActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -63,7 +66,7 @@ public class ClubListActivity extends AppCompatActivity {
         Log.d(TAG, "getClubs: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs_list);
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
         Log.d(TAG, "getClubs: created request " + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
@@ -133,7 +136,7 @@ public class ClubListActivity extends AppCompatActivity {
     private View.OnClickListener addButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            Toast.makeText(ClubListActivity.this,"clicked",Toast.LENGTH_SHORT).show();
+           startActivity(new Intent(ClubListActivity.this, NewClubActivity.class));
         }
     };
     private boolean isLastItemDisplaying(RecyclerView recyclerView){
@@ -152,5 +155,10 @@ public class ClubListActivity extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         refreshData();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ClubListActivity.this, EventListActivity.class));
     }
 }
