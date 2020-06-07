@@ -1,47 +1,21 @@
 package com.fraczekkrzysztof.gocycling.clubdetails;
 
-import android.content.Intent;
-import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.URLUtil;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.conversation.ConversationListActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
-import com.fraczekkrzysztof.gocycling.model.ConfirmationModel;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
-import com.fraczekkrzysztof.gocycling.model.UserModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
-import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.entity.StringEntity;
 
 public class ClubDetailActivity extends AppCompatActivity {
 

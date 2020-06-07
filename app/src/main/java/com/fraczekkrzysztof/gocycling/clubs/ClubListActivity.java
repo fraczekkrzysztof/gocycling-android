@@ -42,7 +42,7 @@ public class ClubListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clubs);
         mClubListSwype = findViewById(R.id.clubs_list_swipe);
-        mClubListSwype.setOnRefreshListener(OnRefreshListener);
+        mClubListSwype.setOnRefreshListener(onRefreshListener);
         mAddButton = findViewById(R.id.add_club);
         mAddButton.setOnClickListener(addButtonClickedListener);
         initRecyclerView();
@@ -95,7 +95,7 @@ public class ClubListActivity extends AppCompatActivity {
         });
     }
 
-    private SwipeRefreshLayout.OnRefreshListener OnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
         public void onRefresh() {
             Log.d(TAG, "onRefresh: refreshing");
@@ -111,10 +111,6 @@ public class ClubListActivity extends AppCompatActivity {
     }
 
     private RecyclerView.OnScrollListener prOnScrollListener = new RecyclerView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-        }
 
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -131,6 +127,17 @@ public class ClubListActivity extends AppCompatActivity {
             }
         }
 
+        private boolean isLastItemDisplaying(RecyclerView recyclerView){
+            //check if the adapter item count is greater than 0
+            if(recyclerView.getAdapter().getItemCount() != 0){
+                //get the last visible item on screen using the layoutmanager
+                int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                //apply some logic here.
+                if(lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
+                    return true;
+            }
+            return  false;
+        }
     };
 
     private View.OnClickListener addButtonClickedListener = new View.OnClickListener() {
@@ -139,17 +146,7 @@ public class ClubListActivity extends AppCompatActivity {
            startActivity(new Intent(ClubListActivity.this, NewClubActivity.class));
         }
     };
-    private boolean isLastItemDisplaying(RecyclerView recyclerView){
-        //check if the adapter item count is greater than 0
-        if(recyclerView.getAdapter().getItemCount() != 0){
-            //get the last visible item on screen using the layoutmanager
-            int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
-            //apply some logic here.
-            if(lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
-                return true;
-        }
-        return  false;
-    }
+
 
     @Override
     protected void onPostResume() {
