@@ -66,6 +66,7 @@
         <activity android:name=".usernotifications.NotificationLists" />
         <activity android:name=".clubs.ClubListActivity" />
         <activity android:name=".newclub.NewClubActivity"/>
+        <activity android:name=".clubdetails.ClubDetailActivity"/>
         <activity
             android:name=".conversation.ConversationListActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />
