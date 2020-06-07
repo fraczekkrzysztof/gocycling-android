@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
+import com.fraczekkrzysztof.gocycling.clubdetails.ClubDetailActivity;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
@@ -67,6 +68,14 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
         Log.d(TAG, "onBindViewHolder: called");
         holder.textName.setText(mClubList.get(position).getName());
         holder.textLocation.setText(mClubList.get(position).getLocation());
+        holder.parentLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(mContext, ClubDetailActivity.class);
+                intent.putExtra("Club",mClubList.get(position));
+                mContext.startActivity(intent);
+            }
+        });
     }
 
     @Override

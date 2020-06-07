@@ -5,10 +5,11 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClubModel {
+public class ClubModel implements Serializable {
 
     private static final String TAG = "ClubModel";
     private long id;
