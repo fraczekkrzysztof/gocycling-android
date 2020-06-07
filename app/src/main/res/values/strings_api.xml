@@ -26,4 +26,5 @@
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
     <string name="api_external_routes_list">api/custom/externalroutes/list</string>
     <string name="api_clubs">api/clubs</string>
+    <string name="api_clubs_members">api/users/search/findUserClubMembers</string>
 </resources>

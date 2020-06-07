@@ -1,21 +1,36 @@
 package com.fraczekkrzysztof.gocycling.clubdetails;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.google.firebase.auth.FirebaseAuth;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import cz.msebera.android.httpclient.Header;
 
 public class ClubDetailActivity extends AppCompatActivity {
 
@@ -49,18 +64,23 @@ public class ClubDetailActivity extends AppCompatActivity {
         mLocationButton = findViewById(R.id.event_detail_show_location);
 //        mLocationButton.setOnClickListener(showLocationButtonListener);
         mSwipeRefreshLayout = findViewById(R.id.club_detail_swipe_layout);
-//        mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
+        mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         getSupportActionBar().setSubtitle("Club details");
     }
 
+    private void refreshData(String userUid, long eventId){
+        mSwipeRefreshLayout.setRefreshing(true);
+        getMembers();
 
-//    private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
-//        @Override
-//        public void onRefresh() {
-//            Log.d(TAG, "onRefresh: refreshing");
-//            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
-//        }
-//    };
+    }
+
+    private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            Log.d(TAG, "onRefresh: refreshing");
+            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
+        }
+    };
 //
 //    private void setConfirmationButton(boolean isConfirmed) {
 //        if (isConfirmed){
@@ -81,20 +101,14 @@ public class ClubDetailActivity extends AppCompatActivity {
 //
 //    }
 //
-//    private void setTexts(){
-//        mTitle.setText(mEvent.getName());
-//        mWhen.setText(DateUtils.sdfWithTime.format(mEvent.getDateAndTime()));
-//        mWhere.setText(mEvent.getPlace());
-//        mDetails.setText(mEvent.getDetails());
-//    }
+    private void setTexts(){
+        mName.setText(mClub.getName());
+        mOwner.setText(mClub.getOwner());
+        mLocation.setText(mClub.getLocation());
+        mDetails.setText(mClub.getDetails());
+    }
 //
-//    private void refreshData(String userUid, long eventId){
-//        mSwipeRefreshLayout.setRefreshing(true);
-//        getCreatorUserName();
-//        getInformationAboutUserConfirmation(userUid,eventId);
-//        getConfirmedUser();
-//
-//    }
+
 //
 //    private void getInformationAboutUserConfirmation(String userUid, long eventId){
 //        Log.d(TAG, "getInformationAboutUserConfirmation: called");
@@ -127,36 +141,35 @@ public class ClubDetailActivity extends AppCompatActivity {
 //
 //
 //
-//    private void getConfirmedUser(){
-//        Log.d(TAG, "getConfirmedUser: called");
-//        mUserConfirmed.clear();
-//        final boolean[] toReturn = {false};
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-//        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_user_confirmed);
-//        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + mEvent.getId();
-//        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
-//        client.get(requestAddress,new JsonHttpResponseHandler(){
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-//                super.onSuccess(statusCode, headers, response);
-//                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
-//                for (UserModel user : userList){
-//                    mUserConfirmed.add(user.getName());
-//                }
-//                setArrayAdapterToListView();
-//                mSwipeRefreshLayout.setRefreshing(false);
-//                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-//                super.onFailure(statusCode, headers, responseString, throwable);
-//                mSwipeRefreshLayout.setRefreshing(false);
-//                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
-//            }
-//        });
-//    }
+    private void getMembers(){
+        Log.d(TAG, "getMembers: called");
+        mMembersList.clear();
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs_members);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "clubId=" + mClub.getId();
+        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
+                for (UserModel user : userList){
+                    mMembersList.add(user.getName());
+                }
+                setArrayAdapterToListView();
+                mSwipeRefreshLayout.setRefreshing(false);
+                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                mSwipeRefreshLayout.setRefreshing(false);
+                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
+            }
+        });
+    }
 //
 //    private void getCreatorUserName(){
 //        Log.d(TAG, "getCreatorUserName: called");
@@ -265,27 +278,27 @@ public class ClubDetailActivity extends AppCompatActivity {
 //        }
 //    };
 //
-//    private void setArrayAdapterToListView(){
-//        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,mUserConfirmed){
-//            @NonNull
-//            @Override
-//            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-//                View view = super.getView(position, convertView, parent);
-//                TextView text = (TextView) view.findViewById(android.R.id.text1);
-//                text.setTextColor(Color.BLACK);
-//                text.setTextSize(Float.parseFloat("15"));
-//                return view;
-//            }
-//        };
-//        mListView.setAdapter(arrayAdapter);
-//    }
+    private void setArrayAdapterToListView(){
+        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,mMembersList){
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView text = (TextView) view.findViewById(android.R.id.text1);
+                text.setTextColor(Color.BLACK);
+                text.setTextSize(Float.parseFloat("15"));
+                return view;
+            }
+        };
+        mListView.setAdapter(arrayAdapter);
+    }
 //
-//    @Override
-//    protected void onPostResume() {
-//        super.onPostResume();
-//        refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
-//        setTexts();
-//    }
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
+        setTexts();
+    }
 //
 //    private void setDialogMessage(){
 //        String eventDetails = mEvent.getDetails();
