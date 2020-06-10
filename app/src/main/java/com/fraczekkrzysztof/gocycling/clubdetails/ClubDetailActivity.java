@@ -19,8 +19,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.model.MemberModel;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -35,7 +35,7 @@ import cz.msebera.android.httpclient.Header;
 public class ClubDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "ClubDetailActivity";
-    private long confirmationId = -1;
+    private long membershipId = -1;
     TextView mOwner;
     TextView mName;
     TextView mLocation;
@@ -68,8 +68,10 @@ public class ClubDetailActivity extends AppCompatActivity {
         getSupportActionBar().setSubtitle("Club details");
     }
 
-    private void refreshData(String userUid, long eventId){
+    private void refreshData(String userUid, long clubId){
         mSwipeRefreshLayout.setRefreshing(true);
+        getOwnerUserName();
+        getInformationAboutUserMembership(userUid,clubId);
         getMembers();
 
     }
@@ -81,66 +83,65 @@ public class ClubDetailActivity extends AppCompatActivity {
             refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
         }
     };
-//
-//    private void setConfirmationButton(boolean isConfirmed) {
-//        if (isConfirmed){
-//            setConfirmedButtonToConfirmed();
-//        } else {
-//            setConfirmedButtonToNotConfirmed();
-//        }
-//    }
-//
-//    private void setConfirmedButtonToConfirmed(){
-//        mConfirmButton.setText("CANCEL CONFIRMATION");
-//        mConfirmButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
-//    }
-//
-//    private void setConfirmedButtonToNotConfirmed(){
-//        mConfirmButton.setText("CONFIRM");
-//        mConfirmButton.setBackgroundColor(getResources().getColor(R.color.primaryDarkColor));
-//
-//    }
-//
+
+    private void setJoinButton(boolean isConfirmed) {
+        if (isConfirmed){
+            setJoinButtonToJoined();
+        } else {
+            setJoinButtonToNotJoined();
+        }
+    }
+
+    private void setJoinButtonToJoined(){
+        mJoinButton.setText("LEAVE");
+        mJoinButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
+    }
+
+    private void setJoinButtonToNotJoined(){
+        mJoinButton.setText("JOIN");
+        mJoinButton.setBackgroundColor(getResources().getColor(R.color.primaryDarkColor));
+
+    }
+
     private void setTexts(){
         mName.setText(mClub.getName());
-        mOwner.setText(mClub.getOwner());
         mLocation.setText(mClub.getLocation());
         mDetails.setText(mClub.getDetails());
     }
-//
 
-//
-//    private void getInformationAboutUserConfirmation(String userUid, long eventId){
-//        Log.d(TAG, "getInformationAboutUserConfirmation: called");
-//        final boolean[] toReturn = {false};
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-//        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_find_confirmation_by_user_and_event);
-//        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + userUid;
-//        requestAddress = requestAddress + ApiUtils.PARAMS_AND + "id=" + eventId;
-//        Log.d(TAG, "getEvents: created request" + requestAddress);
-//        client.get(requestAddress,new JsonHttpResponseHandler(){
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-//                super.onSuccess(statusCode, headers, response);
-//                Log.d(TAG, "onSuccess: This event is already confirmed by user");
-//                List<ConfirmationModel> listOfConfirmation = ConfirmationModel.fromJson(response);
-//                setConfirmationButton((listOfConfirmation.size()>0));
-//                if (listOfConfirmation.size()>0){
-//                    confirmationId = listOfConfirmation.get(0).getId();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-//                super.onFailure(statusCode, headers, responseString, throwable);
-//                Log.e(TAG, "onFailure: error on checking is this event confirmed", throwable);
-//            }
-//        });
-//    }
-//
-//
-//
+
+
+    private void getInformationAboutUserMembership(String userUid, long clubId){
+        Log.d(TAG, "getInformationAboutUserMembership: called");
+        final boolean[] toReturn = {false};
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_club_user_membership);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + userUid;
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + "clubId=" + clubId;
+        Log.d(TAG, "getInformationAboutUserMembership: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d(TAG, "onSuccess: successfully received information about user membership");
+                List<MemberModel> listOfMembers = MemberModel.fromJson(response);
+                setJoinButton((listOfMembers.size()>0));
+                if (listOfMembers.size()>0){
+                    membershipId = listOfMembers.get(0).getId();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                Log.e(TAG, "onFailure: error on checking that user is member of club", throwable);
+            }
+        });
+    }
+
+
+
     private void getMembers(){
         Log.d(TAG, "getMembers: called");
         mMembersList.clear();
@@ -159,41 +160,41 @@ public class ClubDetailActivity extends AppCompatActivity {
                 }
                 setArrayAdapterToListView();
                 mSwipeRefreshLayout.setRefreshing(false);
-                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
+                Log.d(TAG, "onSuccess: Successfully retrieved list of members");
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 mSwipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event",throwable);
+                Log.e(TAG, "onFailure: There is an error while retrieving list of members",throwable);
             }
         });
     }
-//
-//    private void getCreatorUserName(){
-//        Log.d(TAG, "getCreatorUserName: called");
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-//        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-//        requestAddress = requestAddress + "/" + mEvent.getCreatedBy();
-//        Log.d(TAG, "getCreatorUserName: created request" + requestAddress);
-//        client.get(requestAddress,new JsonHttpResponseHandler(){
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-//                super.onSuccess(statusCode, headers, response);
-//                UserModel creator = UserModel.fromJsonUser(response,false);
-//                mWho.setText(creator.getName());
-//                Log.d(TAG, "onSuccess: Successfully retrieved user who create event");
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-//                super.onFailure(statusCode, headers, responseString, throwable);
-//                Log.e(TAG, "onFailure: There is an error while retrieving user who create event",throwable);
-//            }
-//        });
-//    }
+
+    private void getOwnerUserName(){
+        Log.d(TAG, "getOwnerUserName: called");
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+        requestAddress = requestAddress + "/" + mClub.getOwner();
+        Log.d(TAG, "getOwnerUserName: created request" + requestAddress);
+        client.get(requestAddress,new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                UserModel creator = UserModel.fromJsonUser(response,false);
+                mOwner.setText(creator.getName());
+                Log.d(TAG, "onSuccess: Successfully retrieved club owner");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                super.onFailure(statusCode, headers, responseString, throwable);
+                Log.e(TAG, "onFailure: There is an error while retrieving club owner",throwable);
+            }
+        });
+    }
 //
 //    private View.OnClickListener showLocationButtonListener = new View.OnClickListener() {
 //        @Override
@@ -227,13 +228,13 @@ public class ClubDetailActivity extends AppCompatActivity {
 //                AsyncHttpClient client = new AsyncHttpClient();
 //                client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
 //                String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_confirmation_address);
-//                if (confirmationId > 0){
-//                    requestAddress = requestAddress + "/" + confirmationId;
+//                if (membershipId > 0){
+//                    requestAddress = requestAddress + "/" + membershipId;
 //                    client.delete(requestAddress, new AsyncHttpResponseHandler() {
 //                        @Override
 //                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 //                            Log.d(TAG, "onSuccess: successfully delete confirmation");
-//                            confirmationId=0;
+//                            membershipId=0;
 //                            mSwipeRefreshLayout.setRefreshing(false);
 //                            Toast.makeText(getBaseContext(),"Successfully cancel confirmation",Toast.LENGTH_SHORT).show();
 //                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());
@@ -257,7 +258,7 @@ public class ClubDetailActivity extends AppCompatActivity {
 //                        @Override
 //                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 //                            Log.d(TAG, "onSuccess: Successfully add confirmtion");
-//                            confirmationId = getConfirmationIdFromHeaderResponse(headers);
+//                            membershipId = getConfirmationIdFromHeaderResponse(headers);
 //                            Toast.makeText(ClubDetailActivity.this,"Successfully confirmed!",Toast.LENGTH_SHORT).show();
 //                            mSwipeRefreshLayout.setRefreshing(false);
 //                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEvent.getId());

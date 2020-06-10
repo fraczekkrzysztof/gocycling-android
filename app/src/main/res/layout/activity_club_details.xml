@@ -35,7 +35,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:textSize="10dp"
-            android:text="@string/event_details_who"
+            android:text="@string/club_details_owner"
             android:textColor="@color/blackTextColor"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/club_detail_name" />
@@ -63,7 +63,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:textSize="10dp"
-            android:text="@string/event_details_where"
+            android:text="@string/club_details_location"
             android:textColor="@color/blackTextColor"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/club_detail_owner" />
@@ -117,8 +117,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-
-            android:layout_marginEnd="50dp"
+            android:layout_marginEnd="30dp"
             android:background="@color/primaryDarkColor"
             android:text="@string/event_details_button_confirm"
             android:textColor="@color/primaryTextColor"

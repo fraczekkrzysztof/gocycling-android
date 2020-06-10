@@ -19,6 +19,8 @@
     <string name="open_app_setting">open app settings</string>
     <string name="title_activity_maps">Map</string>
     <string name="redirect_uri_strava">https://gocyclingapp/callback</string>
+    <string name="club_details_owner">Owner</string>
+    <string name="club_details_location">Location</string>
     <string name="club_join_button">Join</string>
     <string name="club_leave_button">Leave</string>
 </resources>
