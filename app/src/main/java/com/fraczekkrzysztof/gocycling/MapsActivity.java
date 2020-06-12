@@ -4,6 +4,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.os.Bundle;
 
+import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -16,6 +17,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private EventModel mEvent;
+    private ClubModel mClub;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +25,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
         //
         mEvent = (EventModel) getIntent().getSerializableExtra("Event");
+        mClub = (ClubModel) getIntent().getSerializableExtra("Club");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -42,11 +45,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-        LatLng eventPlace = new LatLng(mEvent.getLatitude(), mEvent.getLongitude());
+        LatLng place = new LatLng(0,0);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.addMarker(new MarkerOptions().position(eventPlace).title(mEvent.getPlace()));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(eventPlace,16.0f));
+        // Add a marker in Sydney and move the camera
+        if(mEvent != null){
+            place = new LatLng(mEvent.getLatitude(), mEvent.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(place).title(mEvent.getPlace()));
+        }
+        if(mClub != null){
+            place = new LatLng(mClub.getLatitude(), mClub.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(place).title(mClub.getLocation()));
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place,16.0f));
     }
 }

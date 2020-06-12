@@ -137,7 +137,7 @@
             android:text="Members"
             android:textColor="@color/blackTextColor"
             android:textSize="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/list_of_users_confirmed"
+            app:layout_constraintBottom_toTopOf="@+id/club_details_members"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/club_join_button" />
 
