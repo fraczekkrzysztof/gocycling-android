@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +19,7 @@ import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.newclub.NewClubActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
@@ -36,6 +38,7 @@ public class ClubListActivity extends AppCompatActivity {
     private FloatingActionButton mAddButton;
     private int page = 0;
     private int totalPages = 0;
+    private CheckBox mOnlyUserClubs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,8 @@ public class ClubListActivity extends AppCompatActivity {
         mClubListSwype.setOnRefreshListener(onRefreshListener);
         mAddButton = findViewById(R.id.add_club);
         mAddButton.setOnClickListener(addButtonClickedListener);
+        mOnlyUserClubs = findViewById(R.id.clubs_list_checkbox);
+        mOnlyUserClubs.setOnClickListener(onCheckboxClickedListener);
         initRecyclerView();
         getSupportActionBar().setSubtitle("Clubs");
     }
@@ -66,8 +71,14 @@ public class ClubListActivity extends AppCompatActivity {
         Log.d(TAG, "getClubs: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
+        String requestAddress = getResources().getString(R.string.api_base_address);
+        if (mOnlyUserClubs.isChecked()){
+            requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member)+ ApiUtils.PARAMS_START + "userUid="+FirebaseAuth.getInstance().getCurrentUser().getUid();
+            requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
+        } else {
+            requestAddress = requestAddress + getResources().getString(R.string.api_clubs);
+            requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
+        }
         Log.d(TAG, "getClubs: created request " + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override
@@ -154,6 +165,12 @@ public class ClubListActivity extends AppCompatActivity {
         refreshData();
     }
 
+    private View.OnClickListener onCheckboxClickedListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+           refreshData();
+        }
+    };
     @Override
     public void onBackPressed() {
         startActivity(new Intent(ClubListActivity.this, EventListActivity.class));
