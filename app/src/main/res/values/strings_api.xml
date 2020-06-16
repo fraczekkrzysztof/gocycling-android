@@ -30,4 +30,5 @@
     <string name="api_members">api/members</string>
     <string name="api_clubs_members">api/users/search/findUserClubMembers</string>
     <string name="api_club_user_membership">api/members/search/findAllByUserUidAndClubId</string>
+    <string name="api_club_for_event">api/clubs/search/findClubForEventId</string>
 </resources>

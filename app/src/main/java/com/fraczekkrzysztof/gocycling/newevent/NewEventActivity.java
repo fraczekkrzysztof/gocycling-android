@@ -3,6 +3,7 @@ package com.fraczekkrzysztof.gocycling.newevent;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -13,24 +14,23 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
+import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.RouteModel;
 import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
@@ -58,7 +58,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -73,9 +72,13 @@ public class NewEventActivity extends AppCompatActivity {
     private EditText mEditTextRoute;
     private EditText mEditTextDetails;
     private ImageButton mRouteButton;
+    private Spinner mClubSpinner;
     private Button mAddButton;
+    private SwipeRefreshLayout mNewEventSwipe;
     private EventModel mEventToEdit;
     private String mode;
+    private List<ClubModel> mListOfClubs = new ArrayList<>();
+    private long mSelectedClubId = -1;
     AlertDialog mDialog;
     private double latitude = -999;
     private double longtitude = -999;
@@ -93,7 +96,8 @@ public class NewEventActivity extends AppCompatActivity {
         mEditTextDate = findViewById(R.id.new_event_date);
         mEditTextDetails = findViewById(R.id.new_events_detail);
         mEditTextRoute = findViewById(R.id.new_event_route);
-
+        mClubSpinner = findViewById(R.id.new_event_club_spinner);
+        mNewEventSwipe = findViewById(R.id.new_event_swipe_layout);
         mEditTextPlace.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
@@ -131,6 +135,14 @@ public class NewEventActivity extends AppCompatActivity {
         });
         mode = getIntent().getStringExtra("mode");
         mEventToEdit = (EventModel) getIntent().getSerializableExtra("EventToEdit");
+        if (mEventToEdit != null){
+            setFieldForEdit(mEventToEdit);
+            setTextForButton("UPDATE");
+            getSingleClubForSpinnerAndBlockIt(mEventToEdit);
+        } else {
+            getClubsForSpinner();
+        }
+
         getSupportActionBar().setSubtitle("New event");
     }
 
@@ -198,7 +210,16 @@ public class NewEventActivity extends AppCompatActivity {
         boolean check3 = validateEditTextIsEmpty(mEditTextDate);
         boolean check4 = (latitude != -999);
         boolean check5 = (longtitude != -999);
-        return check1 && check2 && check3 && check4 & check5;
+        boolean check6 = validateClubSelected(mSelectedClubId);
+        return check1 && check2 && check3 && check4 & check5 && check6;
+    }
+
+    private boolean validateClubSelected(long idOfSelectedClub){
+        if (idOfSelectedClub == -1){
+            Toast.makeText(NewEventActivity.this,"You have to select club",Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 
     private boolean validateEditTextIsEmpty(EditText field){
@@ -225,6 +246,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
+            params.put("club","api/clubs/"+mSelectedClubId);
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
             client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
@@ -260,6 +282,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
+            params.put("club","api/clubs/"+mSelectedClubId);
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
             client.put(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
@@ -285,21 +308,6 @@ public class NewEventActivity extends AppCompatActivity {
         mAddButton.setText(text);
     }
 
-    @Override
-    protected void onPostResume() {
-        super.onPostResume();
-        if(mode != null && mode.equals("EDIT")){
-            setFieldForEdit(mEventToEdit);
-            setTextForButton("UPDATE");
-        } else {
-//            mEditTextName.setText("");
-//            mEditTextPlace.setText("");
-//            mEditTextDate.setText("");
-//            latitude = -999;
-//            longtitude = -999;
-//            setTextForButton("CREATE");
-        }
-    }
 
     private void startActivityForMapResult(){
         Places.initialize(getApplicationContext(),getString(R.string.google_maps_key));
@@ -417,6 +425,109 @@ public class NewEventActivity extends AppCompatActivity {
         mDialog = builder.create();
         mDialog.show();
     }
+
+    private void getSingleClubForSpinnerAndBlockIt(EventModel event){
+        mNewEventSwipe.setRefreshing(true);
+        Log.d(TAG, "getSingleClubForSpinnerAndBlockIt: called");
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address);
+        requestAddress = requestAddress + getResources().getString(R.string.api_club_for_event)+ ApiUtils.PARAMS_START + "eventId="+event.getId();
+
+        Log.d(TAG, "getSingleClubForSpinnerAndBlockIt: created request " + requestAddress);
+        client.get(requestAddress, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d(TAG, "onSuccess: response successfully received");
+                List<ClubModel> listClubs = ClubModel.fromJson(response);
+                addSingleClubForSpinnerAndBlockIt(listClubs.get(0));
+                mNewEventSwipe.setRefreshing(false);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                Toast.makeText(NewEventActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"Error during retrieving signle club for event to edit", throwable);
+                if (errorResponse != null){
+                    Log.d(TAG, errorResponse.toString());
+                }
+                mNewEventSwipe.setRefreshing(false);
+            }
+        });
+    }
+
+    private void addSingleClubForSpinnerAndBlockIt(ClubModel clubModel) {
+        mSelectedClubId = clubModel.getId();
+        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,Arrays.asList(clubModel));
+        mClubSpinner.setAdapter(clubAdapter);
+        mClubSpinner.setEnabled(false);
+    }
+
+    private void getClubsForSpinner(){
+        mNewEventSwipe.setRefreshing(true);
+        Log.d(TAG, "getClubs: called");
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address);
+        requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member)+ ApiUtils.PARAMS_START + "userUid="+FirebaseAuth.getInstance().getCurrentUser().getUid();
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSizeToRequest(1000);
+
+        Log.d(TAG, "getClubs: created request " + requestAddress);
+        client.get(requestAddress, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d(TAG, "onSuccess: response successfully received");
+                List<ClubModel> listClubs = ClubModel.fromJson(response);
+                addClubsToSpinner(listClubs);
+                mNewEventSwipe.setRefreshing(false);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                Toast.makeText(NewEventActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"Error during retrieving club list", throwable);
+                if (errorResponse != null){
+                    Log.d(TAG, errorResponse.toString());
+                }
+                mNewEventSwipe.setRefreshing(false);
+            }
+        });
+    }
+
+    private void addClubsToSpinner(List<ClubModel> listClubs) {
+        mListOfClubs = listClubs;
+        List<ClubModel> listOfClubsWithSelectOne = new ArrayList<>();
+        ClubModel fakeClubModel = new ClubModel();
+        fakeClubModel.setId(-1);
+        fakeClubModel.setName("--Pick a club--");
+        listOfClubsWithSelectOne.add(fakeClubModel);
+        listOfClubsWithSelectOne.addAll(listClubs);
+        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,listOfClubsWithSelectOne);
+        mClubSpinner.setAdapter(clubAdapter);
+        mClubSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+    }
+
+    private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+            //i-1 because there is a fake one on the top of list
+            if(i>0) {
+                mSelectedClubId = mListOfClubs.get(i - 1).getId();
+            } else {
+                mSelectedClubId = -1;
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+            mSelectedClubId = -1;
+        }
+    };
+
 
 
 }
