@@ -1,10 +1,5 @@
 package com.fraczekkrzysztof.gocycling.newevent;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -27,7 +22,14 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.adapters.ClubAdapter;
+import com.fraczekkrzysztof.gocycling.adapters.RouteAdapter;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
@@ -211,7 +213,7 @@ public class NewEventActivity extends AppCompatActivity {
         boolean check4 = (latitude != -999);
         boolean check5 = (longtitude != -999);
         boolean check6 = validateClubSelected(mSelectedClubId);
-        return check1 && check2 && check3 && check4 & check5 && check6;
+        return check1 && check2 && check3 && check4 && check5 && check6;
     }
 
     private boolean validateClubSelected(long idOfSelectedClub){

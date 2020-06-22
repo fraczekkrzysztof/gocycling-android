@@ -1,5 +1,21 @@
 package com.fraczekkrzysztof.gocycling.event;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
@@ -12,37 +28,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.firebase.ui.auth.AuthUI;
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.adapters.ClubAdapter;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.clubs.ClubListActivity;
 import com.fraczekkrzysztof.gocycling.logging.LoggingActivity;
+import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.myaccount.MyAccount;
 import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
 import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.fraczekkrzysztof.gocycling.usernotifications.NotificationLists;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -54,12 +52,13 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-
 import cz.msebera.android.httpclient.Header;
 
 public class EventListActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
     private static final String TAG = "EventListActivity";
+    private static final String SHARED_PREF_TAG = "EVENTS_LIST";
+    private static final String SHARED_PREF_LAST_SELECTED_CLUB = "LAST_SELECTED_CLUB";
 
     private RecyclerView mRecyclerView;
     private EventListRecyclerViewAdapter mAdapter;
@@ -70,17 +69,20 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     private int totalPages = 0;
     private AlertDialog mDialog;
     private ImageView dwaKolaImage;
-    private AdView mAdView;
+    private Spinner mClubSpinner;
+    //    private AdView mAdView;
+    private List<ClubModel> mListOfClubs;
+    private long mSelectedClubId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event_list);
-        MobileAds.initialize(this, new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {
-            }
-        });
+//        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+//            @Override
+//            public void onInitializationComplete(InitializationStatus initializationStatus) {
+//            }
+//        });
 //        mAdView = findViewById(R.id.adView);
 //        AdRequest adRequest = new AdRequest.Builder().build();
 //        mAdView.loadAd(adRequest);
@@ -102,6 +104,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         toogle.syncState();
         createDialogForQuit();
         initRecyclerView();
+        mClubSpinner = findViewById(R.id.event_list_club_spinner);
         showDialogForAppPermission();
         Log.d(TAG, "onCreate:  started.");
     }
@@ -161,13 +164,13 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         mRecyclerView.addItemDecoration(divider);
     }
 
-    private void getEvents(int page){
+    private void getEvents(int page, long clubId) {
         eventListSwipe.setRefreshing(true);
         Log.d(TAG, "getEvents: called");
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_current);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_by_club_id);
+        requestAddress = requestAddress + ApiUtils.PARAMS_START + "clubId=" + clubId + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
         Log.d(TAG, "Events: created request " + requestAddress);
         client.get(requestAddress, new JsonHttpResponseHandler(){
             @Override
@@ -199,7 +202,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         mAdapter.clearEvents();
         page = 0;
         totalPages = 0;
-        getEvents(0);
+        getClubsForSpinner();
     }
 
     private RecyclerView.OnScrollListener prOnScrollListener = new RecyclerView.OnScrollListener() {
@@ -219,7 +222,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                 }
                 page++;
                 Log.d(TAG, "Load more data for page " + page);
-                getEvents(page);
+                getEvents(page, mSelectedClubId);
             }
         }
 
@@ -338,6 +341,82 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         builder.setNegativeButton(R.string.close, null);
 
         builder.create().show();
+    }
+
+    private long getLastPickedClubId() {
+        return getApplicationContext().getSharedPreferences(SHARED_PREF_TAG, Context.MODE_PRIVATE)
+                .getLong(SHARED_PREF_LAST_SELECTED_CLUB, -1);
+    }
+
+    private void saveLastPickedClubId(long clubId) {
+        SharedPreferences sharedPrefs = getApplicationContext().getSharedPreferences(SHARED_PREF_TAG, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putLong(SHARED_PREF_LAST_SELECTED_CLUB, clubId);
+        editor.commit();
 
     }
+
+    private void getClubsForSpinner() {
+        Log.d(TAG, "getClubsForSpinner: called");
+        eventListSwipe.setRefreshing(true);
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
+        String requestAddress = getResources().getString(R.string.api_base_address);
+        requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member) + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
+        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSizeToRequest(1000);
+
+        Log.d(TAG, "getClubsForSpinner: created request " + requestAddress);
+        client.get(requestAddress, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d(TAG, "onSuccess: response successfully received");
+                List<ClubModel> listClubs = ClubModel.fromJson(response);
+                addClubsToSpinner(listClubs);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                Toast.makeText(EventListActivity.this, "There is an error. Please try again!", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error during retrieving club list", throwable);
+                if (errorResponse != null) {
+                    Log.d(TAG, errorResponse.toString());
+                }
+                eventListSwipe.setRefreshing(false);
+            }
+        });
+    }
+
+    private void addClubsToSpinner(List<ClubModel> listClubs) {
+        mListOfClubs = listClubs;
+        ClubAdapter clubAdapter = new ClubAdapter(EventListActivity.this, R.layout.club_list_item, listClubs);
+        mClubSpinner.setAdapter(clubAdapter);
+        mClubSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+        if (getLastPickedClubId() != -1) {
+            for (ClubModel club : listClubs) {
+                if (club.getId() == getLastPickedClubId()) {
+                    int spinnerPosition = clubAdapter.getPosition(club);
+                    mClubSpinner.setSelection(spinnerPosition);
+                    break;
+                }
+            }
+        }
+    }
+
+    private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+            mSelectedClubId = mListOfClubs.get(i).getId();
+            saveLastPickedClubId(mSelectedClubId);
+            mAdapter.clearEvents();
+            getEvents(0, mSelectedClubId);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+            mSelectedClubId = -1;
+            saveLastPickedClubId(mSelectedClubId);
+        }
+    };
 }

@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling.newevent;
+package com.fraczekkrzysztof.gocycling.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,7 +12,6 @@ import androidx.annotation.Nullable;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
-import com.fraczekkrzysztof.gocycling.model.RouteModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +30,6 @@ public class ClubAdapter extends ArrayAdapter<ClubModel> {
         clubsList = objects;
         mResource = resource;
     }
-
-
 
     @Override
     public View getDropDownView(int position, @Nullable View convertView,

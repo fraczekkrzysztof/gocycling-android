@@ -1,4 +1,4 @@
-package com.fraczekkrzysztof.gocycling.newevent;
+package com.fraczekkrzysztof.gocycling.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,9 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.RouteModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
