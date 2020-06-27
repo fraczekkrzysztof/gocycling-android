@@ -6,6 +6,7 @@
     <string name="api_event_current">api/events/search/findCurrent</string>
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_event_by_useruid">api/events/search/findByUserUid</string>
+    <string name="api_event_by_useruid_and_clubid">api/events/search/findByUserUidAndClubId</string>
     <string name="api_event_by_notification_id">api/events/search/findEventByNotificationId</string>
     <string name="api_event_by_club_id">api/events/search/findCurrentByClubId</string>
     <string name="api_cancel_event">api/custom/events/cancelEvent</string>
