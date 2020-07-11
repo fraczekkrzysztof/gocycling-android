@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/event_detail_swipe_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -29,23 +28,23 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/event_detail_who_label"
+            android:id="@+id/event_detail_club_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:textSize="10dp"
-            android:text="@string/event_details_who"
+            android:text="@string/event_details_club"
             android:textColor="@color/blackTextColor"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/event_detail_title" />
 
         <TextView
-            android:id="@+id/event_detail_who"
+            android:id="@+id/event_detail_club"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:text="TextView"
             android:textSize="15dp"
             android:textColor="@color/blackTextColor"
@@ -53,11 +52,35 @@
             app:layout_constraintTop_toBottomOf="@+id/event_detail_title" />
 
         <TextView
+            android:id="@+id/event_detail_who_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:textSize="10dp"
+            android:text="@string/event_details_who"
+            android:textColor="@color/blackTextColor"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_club" />
+
+        <TextView
+            android:id="@+id/event_detail_who"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:text="TextView"
+            android:textSize="15dp"
+            android:textColor="@color/blackTextColor"
+            app:layout_constraintStart_toEndOf="@+id/event_detail_when_label"
+            app:layout_constraintTop_toBottomOf="@+id/event_detail_club" />
+
+        <TextView
             android:id="@+id/event_detail_when_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:textSize="10dp"
             android:text="@string/event_details_when"
             android:textColor="@color/blackTextColor"
@@ -69,7 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:text="TextView"
             android:textSize="15dp"
             android:textColor="@color/blackTextColor"
@@ -81,7 +104,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:textSize="10dp"
             android:text="@string/event_details_where"
             android:textColor="@color/blackTextColor"
@@ -93,7 +116,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
             android:text="TextView"
             android:textColor="@color/blackTextColor"
@@ -121,7 +144,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="15dp"
             android:layout_marginBottom="20dp"
             android:text="Details"
             android:textColor="@color/blackTextColor"
@@ -149,7 +172,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-
             android:layout_marginEnd="50dp"
             android:background="@color/primaryDarkColor"
             android:text="@string/event_details_button_confirm"
@@ -179,7 +201,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="30dp"
             android:text="Already confirmed by"
             android:textColor="@color/blackTextColor"
             android:textSize="10dp"
