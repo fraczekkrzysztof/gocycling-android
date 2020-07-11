@@ -6,7 +6,9 @@
     <string name="api_event_current">api/events/search/findCurrent</string>
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_event_by_useruid">api/events/search/findByUserUid</string>
+    <string name="api_event_by_useruid_and_clubid">api/events/search/findByUserUidAndClubId</string>
     <string name="api_event_by_notification_id">api/events/search/findEventByNotificationId</string>
+    <string name="api_event_by_club_id">api/events/search/findCurrentByClubId</string>
     <string name="api_cancel_event">api/custom/events/cancelEvent</string>
     <string name="api_confirmation_address">api/confirmations</string>
     <string name="api_delete_confirmation_by_user_event">api/custom/confirmations/deleteByUserUidAndEventId</string>
@@ -25,4 +27,10 @@
     <string name="api_strava_process_access_code">api/strava/accessToken</string>
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
     <string name="api_external_routes_list">api/custom/externalroutes/list</string>
+    <string name="api_clubs">api/clubs</string>
+    <string name="api_clubs_which_user_is_member">api/clubs/search/findAllWhichUserIsMember</string>
+    <string name="api_members">api/members</string>
+    <string name="api_clubs_members">api/users/search/findUserClubMembers</string>
+    <string name="api_club_user_membership">api/members/search/findAllByUserUidAndClubId</string>
+    <string name="api_club_for_event">api/clubs/search/findClubForEventId</string>
 </resources>

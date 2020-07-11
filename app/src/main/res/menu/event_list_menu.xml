@@ -15,6 +15,10 @@
         <item
             android:id="@+id/my_notification_menu"
             android:title="Notifications" />
+        <item
+            android:id="@+id/club_list_menu"
+            android:title="Clubs"
+            />
     </group>
     <item android:title="My account">
         <menu>
