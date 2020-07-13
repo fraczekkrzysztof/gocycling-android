@@ -20,28 +20,26 @@ import com.fraczekkrzysztof.gocycling.worker.NotificationChecker;
 import com.fraczekkrzysztof.gocycling.worker.NotificationChecker2;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
-
 import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.HttpConnection;
 import cz.msebera.android.httpclient.HttpStatus;
 import cz.msebera.android.httpclient.entity.StringEntity;
-
-import org.json.JSONObject;
 
 public class LoggingActivity extends AppCompatActivity {
 
 
     private static final String TAG = "LoggingActivity";
-    private static final String sharedPreferencesString = "LoggingPref";
-    private static final String sharedPreferencesLoggedUserString = "LoggedUserId";
+    private static final String SHARED_PREFERENCES_STRING = "LoggingPref";
+    private static final String SHARED_PREFERENCES_LOGGED_USER_STRING = "LoggedUserId";
     private static final int RC_SIGN_IN = 1232;
 
     @Override

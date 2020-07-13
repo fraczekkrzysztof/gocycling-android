@@ -1,7 +1,6 @@
 package com.fraczekkrzysztof.gocycling.conversation;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,9 +12,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
 import com.fraczekkrzysztof.gocycling.model.ConversationModel;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
@@ -45,8 +42,7 @@ public class ConversationListRecyclerViewAdapter extends RecyclerView.Adapter<Co
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_conversation_item,parent,false);
-        ViewHolder holder = new ViewHolder(view);
-        return holder;
+        return new ViewHolder(view);
     }
 
     @Override

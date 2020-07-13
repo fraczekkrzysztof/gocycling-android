@@ -47,13 +47,6 @@ public class RouteAdapter extends ArrayAdapter<RouteModel> {
 
         return listItem;
 
-//        EventModel currentEvent = eventList.get(position);
-//
-//        TextView name = listItem.findViewById(R.id.list_title);
-//        name.setText(currentEvent.getName());
-//
-//        TextView time = listItem.findViewById(R.id.list_time);
-//        time.setText(DateUtils.sdfWithTime.format(currentEvent.getDateAndTime()));
 
     }
 }

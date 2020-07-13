@@ -21,7 +21,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.conversation.ConversationListActivity;
 import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.MemberModel;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
@@ -33,6 +32,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -232,7 +232,7 @@ public class ClubDetailActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: error during leaving club " +responseBody.toString(), error);
+                            Log.e(TAG, "onFailure: error during leaving club " + Arrays.toString(responseBody), error);
                             mSwipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getApplicationContext(),"Error while leaving club!",Toast.LENGTH_SHORT).show();
                         }
@@ -256,7 +256,7 @@ public class ClubDetailActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: " + responseBody.toString(),error);
+                            Log.e(TAG, "onFailure: " + Arrays.toString(responseBody), error);
                             mSwipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getApplicationContext(),"Error while joining!",Toast.LENGTH_SHORT).show();
                         }
@@ -299,7 +299,6 @@ public class ClubDetailActivity extends AppCompatActivity {
                 id = Integer.valueOf(address.substring(address.lastIndexOf('/')+1));
                 return id;
             }
-            Header header = headers[i];
         }
         return id;
     }

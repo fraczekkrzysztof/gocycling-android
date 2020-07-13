@@ -38,6 +38,7 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -154,8 +155,8 @@ public class EventDetailActivity extends AppCompatActivity {
                 super.onSuccess(statusCode, headers, response);
                 Log.d(TAG, "onSuccess: This event is already confirmed by user");
                 List<ConfirmationModel> listOfConfirmation = ConfirmationModel.fromJson(response);
-                setConfirmationButton((listOfConfirmation.size() > 0));
-                if (listOfConfirmation.size() > 0) {
+                setConfirmationButton(!listOfConfirmation.isEmpty());
+                if (!listOfConfirmation.isEmpty()) {
                     confirmationId = listOfConfirmation.get(0).getId();
                 }
             }
@@ -291,7 +292,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: error during deleting confirmation " + responseBody.toString(), error);
+                            Log.e(TAG, "onFailure: error during deleting confirmation " + Arrays.toString(responseBody), error);
                             mSwipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getApplicationContext(), "Error while canceling confirmation!", Toast.LENGTH_SHORT).show();
                         }
@@ -315,7 +316,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: " + responseBody.toString(), error);
+                            Log.e(TAG, "onFailure: " + Arrays.toString(responseBody), error);
                             mSwipeRefreshLayout.setRefreshing(false);
                             Toast.makeText(getApplicationContext(), "Error while confirmed!", Toast.LENGTH_SHORT).show();
                         }
@@ -369,7 +370,6 @@ public class EventDetailActivity extends AppCompatActivity {
                 id = Integer.valueOf(address.substring(address.lastIndexOf("/") + 1));
                 return id;
             }
-            Header header = headers[i];
         }
         return id;
     }
