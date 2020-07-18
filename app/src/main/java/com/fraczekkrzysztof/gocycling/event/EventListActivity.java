@@ -54,7 +54,7 @@ import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
-public class EventListActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+public class EventListActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "EventListActivity";
     private static final String SHARED_PREF_TAG = "EVENTS_LIST";
@@ -95,11 +95,11 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         getSupportActionBar().setSubtitle("All Events");
         mDrawerLayout = findViewById(R.id.event_list_layout);
         mNavigationView = findViewById(R.id.navigation);
-        ((TextView)mNavigationView.getHeaderView(0).findViewById(R.id.header_text)).
+        ((TextView) mNavigationView.getHeaderView(0).findViewById(R.id.header_text)).
                 setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
         mNavigationView.setNavigationItemSelectedListener(this);
 
-        ActionBarDrawerToggle toogle = new ActionBarDrawerToggle(this,mDrawerLayout,mToolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(toogle);
         toogle.syncState();
         createDialogForQuit();
@@ -111,7 +111,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 
     @Override
     public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
             mDialog.show();
@@ -119,7 +119,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 
     }
 
-    private View.OnClickListener dwaKolaButtonClickedListener =  new View.OnClickListener() {
+    private View.OnClickListener dwaKolaButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.2-kola.pl/"));
@@ -128,7 +128,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
     };
 
 
-    private void createDialogForQuit(){
+    private void createDialogForQuit() {
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -152,14 +152,14 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         mDialog = builder.create();
     }
 
-    private void initRecyclerView(){
+    private void initRecyclerView() {
         Log.d(TAG, "initRecyclerView: init recycler view");
         mRecyclerView = findViewById(R.id.recycler_view);
         mAdapter = new EventListRecyclerViewAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setOnScrollListener(prOnScrollListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        DividerItemDecoration divider = new DividerItemDecoration(this,DividerItemDecoration.VERTICAL);
+        DividerItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         divider.setDrawable(getResources().getDrawable(R.drawable.event_list_divider));
         mRecyclerView.addItemDecoration(divider);
     }
@@ -168,17 +168,17 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         eventListSwipe.setRefreshing(true);
         Log.d(TAG, "getEvents: called");
         AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
+        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_by_club_id);
         requestAddress = requestAddress + ApiUtils.PARAMS_START + "clubId=" + clubId + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
         Log.d(TAG, "Events: created request " + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler(){
+        client.get(requestAddress, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 super.onSuccess(statusCode, headers, response);
                 Log.d(TAG, "onSuccess: response successfully received");
                 List<EventModel> listEvents = EventModel.fromJson(response);
-                if (totalPages == 0 ){
+                if (totalPages == 0) {
                     totalPages = EventModel.getTotalPageFromJson(response);
                 }
                 mAdapter.addEvents(listEvents);
@@ -188,9 +188,9 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
-                Toast.makeText(EventListActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
-                Log.e(TAG,"Error during retrieving event list", throwable);
-                if (errorResponse != null){
+                Toast.makeText(EventListActivity.this, "There is an error. Please try again!", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error during retrieving event list", throwable);
+                if (errorResponse != null) {
                     Log.d(TAG, errorResponse.toString());
                 }
                 eventListSwipe.setRefreshing(false);
@@ -198,7 +198,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         });
     }
 
-    private void refreshData(){
+    private void refreshData() {
         mAdapter.clearEvents();
         page = 0;
         totalPages = 0;
@@ -215,8 +215,8 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
 
-            if(isLastItemDisplaying(recyclerView)){
-                if (page == totalPages - 1){
+            if (isLastItemDisplaying(recyclerView)) {
+                if (page == totalPages - 1) {
                     Log.d(TAG, "There is nothing to load");
                     return;
                 }
@@ -228,16 +228,17 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 
 
     };
-    private boolean isLastItemDisplaying(RecyclerView recyclerView){
+
+    private boolean isLastItemDisplaying(RecyclerView recyclerView) {
         //check if the adapter item count is greater than 0
-        if(recyclerView.getAdapter().getItemCount() != 0){
+        if (recyclerView.getAdapter().getItemCount() != 0) {
             //get the last visible item on screen using the layoutmanager
-            int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+            int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
             //apply some logic here.
-            if(lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
+            if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
                 return true;
         }
-        return  false;
+        return false;
     }
 
     private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
@@ -251,15 +252,15 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        switch(menuItem.getItemId()){
+        switch (menuItem.getItemId()) {
             case R.id.logout_menu:
                 AuthUI.getInstance().signOut(this)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()){
+                                if (task.isSuccessful()) {
                                     Log.d(TAG, "onComplete: Successfuly logged out");
-                                    Toast.makeText(getApplicationContext(),"User properly logged out",Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "User properly logged out", Toast.LENGTH_SHORT).show();
                                     Intent loginIntent = new Intent(getApplicationContext(), LoggingActivity.class);
                                     startActivity(loginIntent);
                                 } else {
@@ -304,13 +305,13 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         refreshData();
     }
 
-    public void showDialogForAppPermission(){
+    public void showDialogForAppPermission() {
 
         final String SHARED_PREF_TAG = "PERMISSION INFO";
         final String SHARED_PREF_DONT_SHOW = "DONT_SHOW_AGAIN";
 
-        if (getSharedPreferences(SHARED_PREF_TAG,Context.MODE_PRIVATE)
-                .getBoolean(SHARED_PREF_DONT_SHOW,false)){
+        if (getSharedPreferences(SHARED_PREF_TAG, Context.MODE_PRIVATE)
+                .getBoolean(SHARED_PREF_DONT_SHOW, false)) {
             return;
         }
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
@@ -325,7 +326,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(EventListActivity.this);
-        builder.setCustomTitle(getLayoutInflater().inflate(R.layout.custom_dialog_title,null));
+        builder.setCustomTitle(getLayoutInflater().inflate(R.layout.custom_dialog_title, null));
         String[] array = {"Don't show again"};
         boolean[] checked = {false};
         builder.setMultiChoiceItems(array, checked, new DialogInterface.OnMultiChoiceClickListener() {
@@ -333,7 +334,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
             public void onClick(DialogInterface dialogInterface, int i, boolean b) {
                 SharedPreferences sharedPrefs = getApplicationContext().getSharedPreferences(SHARED_PREF_TAG, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPrefs.edit();
-                editor.putBoolean(SHARED_PREF_DONT_SHOW,b);
+                editor.putBoolean(SHARED_PREF_DONT_SHOW, b);
                 editor.commit();
             }
         });
@@ -372,7 +373,12 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                 super.onSuccess(statusCode, headers, response);
                 Log.d(TAG, "onSuccess: response successfully received");
                 List<ClubModel> listClubs = ClubModel.fromJson(response);
-                addClubsToSpinner(listClubs);
+                if (listClubs.isEmpty()) {
+                    Toast.makeText(EventListActivity.this, "Join to art least one club to show an events!", Toast.LENGTH_SHORT).show();
+                    eventListSwipe.setRefreshing(false);
+                } else {
+                    addClubsToSpinner(listClubs);
+                }
             }
 
             @Override
