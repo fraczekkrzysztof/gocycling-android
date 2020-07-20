@@ -47,7 +47,7 @@ public class NotificationTools extends ContextWrapper{
         Log.d(TAG, "doActionForSuccess: last notification id " + lastNotificationId);
         if (maxNotificationId > lastNotificationId){
             saveLastNotificationIdForUser(maxNotificationId);
-            mNotificationHelper.sendHighPriorityNotifiction("New Notifications","There is some changes in events you confirmed. Check details","", NotificationLists.class);
+            mNotificationHelper.sendHighPriorityNotifiction("New Notifications", "Check detail to not missed your rides information", "", NotificationLists.class);
         }
     }
 

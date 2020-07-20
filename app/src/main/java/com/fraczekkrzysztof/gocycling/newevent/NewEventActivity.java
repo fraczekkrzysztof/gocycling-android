@@ -60,6 +60,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -285,6 +286,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
             params.put("club","api/clubs/"+mSelectedClubId);
+            params.put("updated", DateUtils.sdfWithFullTime.format(new Date()));
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
             client.put(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
