@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.clubdetails.ClubDetailActivity;
-import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +23,11 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
 
     private static final String TAG = "ClubRecycleAdapter";
 
-    private List<ClubModel> mClubList = new ArrayList<>();
+    private List<ClubDto> mClubList = new ArrayList<>();
     private Context mContext;
 
 
-    public void addClubs(List<ClubModel> clubList) {
+    public void addClubs(List<ClubDto> clubList) {
         mClubList.addAll(clubList);
         notifyDataSetChanged();
     }

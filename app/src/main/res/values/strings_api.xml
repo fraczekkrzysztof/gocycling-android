@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="api_base_address">https://gocycling.herokuapp.com/</string>
-<!--    <string name="api_base_address">http://10.0.2.2:8080/</string>-->
+    <!--    <string name="api_base_address">https://gocycling.herokuapp.com/</string>-->
+    <string name="api_base_address">http://10.0.2.2:8080/</string>
     <string name="api_event_address">api/events</string>
     <string name="api_event_current">api/events/search/findCurrent</string>
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
@@ -27,7 +27,7 @@
     <string name="api_strava_process_access_code">api/strava/accessToken</string>
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
     <string name="api_external_routes_list">api/custom/externalroutes/list</string>
-    <string name="api_clubs">api/clubs</string>
+    <string name="api_clubs">api/v2/clubs</string>
     <string name="api_clubs_which_user_is_member">api/clubs/search/findAllWhichUserIsMember</string>
     <string name="api_members">api/members</string>
     <string name="api_clubs_members">api/users/search/findUserClubMembers</string>

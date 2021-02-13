@@ -14,20 +14,26 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
-import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.PageDto;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubListResponse;
 import com.fraczekkrzysztof.gocycling.newclub.NewClubActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.Reader;
 
-import cz.msebera.android.httpclient.Header;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ClubListActivity extends AppCompatActivity {
 
@@ -36,9 +42,9 @@ public class ClubListActivity extends AppCompatActivity {
     private ClubListRecyclerViewAdapter mAdapter;
     private SwipeRefreshLayout mClubListSwype;
     private FloatingActionButton mAddButton;
-    private int page = 0;
-    private int totalPages = 0;
+    private PageDto mPageDto;
     private CheckBox mOnlyUserClubs;
+    final Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,70 +60,70 @@ public class ClubListActivity extends AppCompatActivity {
         getSupportActionBar().setSubtitle("Clubs");
     }
 
-    private void initRecyclerView(){
+    private void initRecyclerView() {
         Log.d(TAG, "initRecyclerView: init recycler view");
         mRecyclerView = findViewById(R.id.clubs_recycler_view);
         mAdapter = new ClubListRecyclerViewAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.setOnScrollListener(prOnScrollListener);
+        mRecyclerView.addOnScrollListener(prOnScrollListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        DividerItemDecoration divider = new DividerItemDecoration(this,DividerItemDecoration.VERTICAL);
+        DividerItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         divider.setDrawable(getResources().getDrawable(R.drawable.event_list_divider));
         mRecyclerView.addItemDecoration(divider);
     }
 
-    private void getClubs(int page){
+    private void getClubs(int page) {
         mClubListSwype.setRefreshing(true);
         Log.d(TAG, "getClubs: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address);
-        if (mOnlyUserClubs.isChecked()){
-            requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member)+ ApiUtils.PARAMS_START + "userUid="+FirebaseAuth.getInstance().getCurrentUser().getUid();
-            requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
-        } else {
-            requestAddress = requestAddress + getResources().getString(R.string.api_clubs);
-            requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.getPageToRequest(page);
-        }
-        Log.d(TAG, "getClubs: created request " + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler(){
+        Request request = prepareRequest(page);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess: response successfully received");
-                List<ClubModel> listClubs = ClubModel.fromJson(response);
-                if (totalPages == 0 ){
-                    totalPages = ClubModel.getTotalPageFromJson(response);
-                }
-                mAdapter.addClubs(listClubs);
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Toast.makeText(ClubListActivity.this, "There is an error. Please try again!", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error during retrieving club list", e);
                 mClubListSwype.setRefreshing(false);
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Toast.makeText(ClubListActivity.this,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
-                Log.e(TAG,"Error during retrieving club list", throwable);
-                if (errorResponse != null){
-                    Log.d(TAG, errorResponse.toString());
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Successfully received response with ClubList");
+                    Reader receivedResponse = response.body().charStream();
+                    ClubListResponse apiResponse = gson.fromJson(receivedResponse, ClubListResponse.class);
+                    runOnUiThread(() -> {
+                        mPageDto = apiResponse.getPage();
+                        mAdapter.addClubs(apiResponse.getClubs());
+                        mClubListSwype.setRefreshing(false);
+                        return;
+                    });
                 }
                 mClubListSwype.setRefreshing(false);
+                Log.e(TAG, String.format("onResponse: Response received, but not %s status.", response.code()));
             }
         });
     }
 
-    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
+    @NotNull
+    private Request prepareRequest(int page) {
+        String url = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs);
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+        if (mOnlyUserClubs.isChecked()) {
+            urlBuilder.addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+        }
+        urlBuilder.addQueryParameter("page", String.valueOf(page));
+        return new Request.Builder()
+                .url(urlBuilder.build().toString())
+                .build();
+    }
+
+    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = () -> {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-        }
     };
 
-    private void refreshData(){
+    private void refreshData() {
         mAdapter.clearClubs();
-        page = 0;
-        totalPages = 0;
         getClubs(0);
     }
 
@@ -126,38 +132,35 @@ public class ClubListActivity extends AppCompatActivity {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-
-            if(isLastItemDisplaying(recyclerView)){
-                if (page == totalPages - 1){
+            if (isLastItemDisplaying(recyclerView)) {
+                if (mPageDto.getNextPage() == 0) {
                     Log.d(TAG, "There is nothing to load");
                     return;
                 }
-                page++;
-                Log.d(TAG, "Load more data for page " + page);
-                getClubs(page);
+                Log.d(TAG, "Load more data");
+                getClubs(mPageDto.getNextPage());
             }
         }
 
-        private boolean isLastItemDisplaying(RecyclerView recyclerView){
+        private boolean isLastItemDisplaying(RecyclerView recyclerView) {
             //check if the adapter item count is greater than 0
-            if(recyclerView.getAdapter().getItemCount() != 0){
+            if (recyclerView.getAdapter().getItemCount() != 0) {
                 //get the last visible item on screen using the layoutmanager
-                int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
                 //apply some logic here.
-                if(lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
+                if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
                     return true;
             }
-            return  false;
+            return false;
         }
     };
 
     private View.OnClickListener addButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-           startActivity(new Intent(ClubListActivity.this, NewClubActivity.class));
+            startActivity(new Intent(ClubListActivity.this, NewClubActivity.class));
         }
     };
-
 
     @Override
     protected void onPostResume() {
@@ -168,9 +171,10 @@ public class ClubListActivity extends AppCompatActivity {
     private View.OnClickListener onCheckboxClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-           refreshData();
+            refreshData();
         }
     };
+
     @Override
     public void onBackPressed() {
         startActivity(new Intent(ClubListActivity.this, EventListActivity.class));
