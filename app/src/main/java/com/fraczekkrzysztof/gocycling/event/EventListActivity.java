@@ -363,7 +363,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
         AsyncHttpClient client = new AsyncHttpClient();
         client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
         String requestAddress = getResources().getString(R.string.api_base_address);
-        requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member) + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
+//        requestAddress = requestAddress + getResources().getString(R.string.api_clubs_which_user_is_member) + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
         requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getSizeToRequest(1000);
 
         Log.d(TAG, "getClubsForSpinner: created request " + requestAddress);

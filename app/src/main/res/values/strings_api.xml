@@ -28,9 +28,6 @@
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
     <string name="api_external_routes_list">api/custom/externalroutes/list</string>
     <string name="api_clubs">api/v2/clubs</string>
-    <string name="api_clubs_which_user_is_member">api/clubs/search/findAllWhichUserIsMember</string>
-    <string name="api_members">api/members</string>
-    <string name="api_clubs_members">api/users/search/findUserClubMembers</string>
-    <string name="api_club_user_membership">api/members/search/findAllByUserUidAndClubId</string>
+    <string name="api_members">api/v2/clubs/%d/members</string>
     <string name="api_club_for_event">api/clubs/search/findClubForEventId</string>
 </resources>

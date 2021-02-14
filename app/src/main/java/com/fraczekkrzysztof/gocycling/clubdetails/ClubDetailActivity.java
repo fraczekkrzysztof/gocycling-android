@@ -1,8 +1,11 @@
 package com.fraczekkrzysztof.gocycling.clubdetails;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,34 +23,39 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.model.ClubModel;
-import com.fraczekkrzysztof.gocycling.model.MemberModel;
-import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubDto;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubResponse;
+import com.fraczekkrzysztof.gocycling.model.v2.club.MemberDto;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.entity.StringEntity;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class ClubDetailActivity extends AppCompatActivity {
 
+
+    private final Gson gson = new Gson();
     private static final String TAG = "ClubDetailActivity";
-    private long membershipId = -1;
+    boolean isMember;
     TextView mOwner;
     TextView mName;
     TextView mLocation;
     TextView mDetails;
-    ClubModel mClub;
-    List<String> mMembersList = new ArrayList<>();
+    long clubId;
     Button mJoinButton;
     ImageButton mLocationButton;
     ListView mListView;
@@ -59,7 +67,6 @@ public class ClubDetailActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate: started!");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_club_details);
-        mClub = (ClubModel) getIntent().getSerializableExtra("Club");
         mName = findViewById(R.id.club_detail_name);
         mOwner = findViewById(R.id.club_detail_owner);
         mLocation = findViewById(R.id.club_detail_location);
@@ -72,205 +79,152 @@ public class ClubDetailActivity extends AppCompatActivity {
         mSwipeRefreshLayout = findViewById(R.id.club_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         getSupportActionBar().setSubtitle("Club details");
+        clubId = getIntent().getLongExtra("clubId", -1);
     }
 
-    private void refreshData(String userUid, long clubId){
+    private void getClubDetails() {
         mSwipeRefreshLayout.setRefreshing(true);
-        getOwnerUserName();
-        getInformationAboutUserMembership(userUid,clubId);
-        getMembers();
+        String url = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs) + "/" + clubId;
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
+        Request request = new Request.Builder()
+                .url(urlBuilder.build().toString())
+                .build();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Toast.makeText(ClubDetailActivity.this, "There is an error. Please try again!", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error during retrieving club list", e);
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Successfully received response with ClubList");
+                    Reader receivedResponse = response.body().charStream();
+                    ClubResponse apiResponse = gson.fromJson(receivedResponse, ClubResponse.class);
+                    runOnUiThread(() -> {
+                        setFields(apiResponse.getClub());
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        return;
+                    });
+                }
+                mSwipeRefreshLayout.setRefreshing(false);
+                Log.e(TAG, String.format("onResponse: Response received, but not %s status.", response.code()));
+            }
+        });
+    }
+
+    private void setFields(ClubDto club) {
+        mName.setText(club.getName());
+        mLocation.setText(club.getLocation());
+        mDetails.setText(club.getDetails());
+        mOwner.setText(club.getOwnerName());
+        setUserMembership(club.getMemberList());
+        setMembers(club.getMemberList());
+    }
+
+    private void setUserMembership(List<MemberDto> memberList) {
+        setJoinButton(false);
+        if (isCurrentUserMember(memberList)) {
+            setJoinButton(true);
+        }
+    }
+
+    private boolean isCurrentUserMember(List<MemberDto> memberList) {
+        return memberList.stream()
+                .anyMatch(m -> m.getUserUid().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()));
+    }
+
+    private void setMembers(List<MemberDto> memberList) {
+        setArrayAdapterToMemberListView(memberList.stream().map(MemberDto::getUserName).collect(Collectors.toList()));
+    }
+
+    private void refreshData() {
+        getClubDetails();
 
     }
 
-    private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
+    private SwipeRefreshLayout.OnRefreshListener onRefresListener = () -> {
             Log.d(TAG, "onRefresh: refreshing");
-            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
-        }
+        refreshData();
     };
 
     private void setJoinButton(boolean isConfirmed) {
-        if (isConfirmed){
+        if (isConfirmed) {
+            isMember = true;
             setJoinButtonToJoined();
         } else {
+            isMember = false;
             setJoinButtonToNotJoined();
         }
     }
 
-    private void setJoinButtonToJoined(){
+    private void setJoinButtonToJoined() {
         mJoinButton.setText("LEAVE");
         mJoinButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
     }
 
-    private void setJoinButtonToNotJoined(){
+    private void setJoinButtonToNotJoined() {
         mJoinButton.setText("JOIN");
         mJoinButton.setBackgroundColor(getResources().getColor(R.color.primaryDarkColor));
 
     }
 
-    private void setTexts(){
-        mName.setText(mClub.getName());
-        mLocation.setText(mClub.getLocation());
-        mDetails.setText(mClub.getDetails());
-    }
-
-
-
-    private void getInformationAboutUserMembership(String userUid, long clubId){
-        Log.d(TAG, "getInformationAboutUserMembership: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_club_user_membership);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + userUid;
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + "clubId=" + clubId;
-        Log.d(TAG, "getInformationAboutUserMembership: created request" + requestAddress);
-        client.get(requestAddress,new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess: successfully received information about user membership");
-                List<MemberModel> listOfMembers = MemberModel.fromJson(response);
-                setJoinButton(!listOfMembers.isEmpty());
-                if (!listOfMembers.isEmpty()){
-                    membershipId = listOfMembers.get(0).getId();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: error on checking that user is member of club", throwable);
-            }
-        });
-    }
-
-
-
-    private void getMembers(){
-        Log.d(TAG, "getMembers: called");
-        mMembersList.clear();
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs_members);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "clubId=" + mClub.getId();
-        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
-        client.get(requestAddress,new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                List<UserModel> userList = UserModel.fromJsonUserList(response,false);
-                for (UserModel user : userList){
-                    mMembersList.add(user.getName());
-                }
-                setArrayAdapterToListView();
-                mSwipeRefreshLayout.setRefreshing(false);
-                Log.d(TAG, "onSuccess: Successfully retrieved list of members");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                mSwipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "onFailure: There is an error while retrieving list of members",throwable);
-            }
-        });
-    }
-
-    private void getOwnerUserName(){
-        Log.d(TAG, "getOwnerUserName: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-        requestAddress = requestAddress + "/" + mClub.getOwner();
-        Log.d(TAG, "getOwnerUserName: created request" + requestAddress);
-        client.get(requestAddress,new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                UserModel creator = UserModel.fromJsonUser(response,false);
-                mOwner.setText(creator.getName());
-                Log.d(TAG, "onSuccess: Successfully retrieved club owner");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: There is an error while retrieving club owner",throwable);
-            }
-        });
-    }
-
-    private View.OnClickListener showLocationButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
+    private View.OnClickListener showLocationButtonListener = view -> {
             Intent showLocation = new Intent(ClubDetailActivity.this, MapsActivity.class);
-            showLocation.putExtra("Club",mClub);
+        //TODO create object with details about locality and pass it here
+        //showLocation.putExtra("Club", mClub);
             startActivity(showLocation);
-        }
     };
 
-    private View.OnClickListener joinedButtonClickedListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            try {
-                mSwipeRefreshLayout.setRefreshing(true);
-                AsyncHttpClient client = new AsyncHttpClient();
-                client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-                String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_members);
-                if (membershipId > 0){
-                    requestAddress = requestAddress + "/" + membershipId;
-                    client.delete(requestAddress, new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            Log.d(TAG, "onSuccess: successfully leave club");
-                            membershipId=0;
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getBaseContext(),"Successfully left club",Toast.LENGTH_SHORT).show();
-                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
-                        }
+    private View.OnClickListener joinedButtonClickedListener = view -> manageUserMembership();
 
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: error during leaving club " + Arrays.toString(responseBody), error);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getApplicationContext(),"Error while leaving club!",Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    JSONObject params = new JSONObject();
-                    params.put("id", 0);
-                    params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    params.put("club", getResources().getString(R.string.api_clubs) + "/" + mClub.getId());
-                    Log.d(TAG, "onClick: " + params.toString());
-                    StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
-                    client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            Log.d(TAG, "onSuccess: Successfully joined");
-                            membershipId = getConfirmationIdFromHeaderResponse(headers);
-                            Toast.makeText(ClubDetailActivity.this,"Successfully joined!",Toast.LENGTH_SHORT).show();
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: " + Arrays.toString(responseBody), error);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getApplicationContext(),"Error while joining!",Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-
-            } catch (Exception e){
-                Log.e(TAG, "onClick: Error during confirmation events",e);
+    private void manageUserMembership() {
+        mSwipeRefreshLayout.setRefreshing(true);
+        Request request = prepareRequest();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "onFailure: error during joining", e);
+                mSwipeRefreshLayout.setRefreshing(false);
+                backgroundThreadShortToast(getApplicationContext(), "Operation finished with error!");
             }
-        }
-    };
 
-    private void setArrayAdapterToListView(){
-        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,mMembersList){
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    refreshData();
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    backgroundThreadShortToast(getApplicationContext(), "Operation finished successfully!");
+                    return;
+                }
+                Log.e(TAG, String.format("onResponse: response received but status %d. %s", response.code(), response.body().string()));
+                backgroundThreadShortToast(getApplicationContext(), "Operation finished with error!");
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+    }
+
+    @NotNull
+    private Request prepareRequest() {
+        String baseRequestAddress = String.format(getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_members), clubId);
+        HttpUrl url = HttpUrl.parse(baseRequestAddress).newBuilder()
+                .addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid()).build();
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .method("POST", RequestBody.create("", null));
+        if (isMember) {
+            requestBuilder.method("DELETE", null);
+        }
+        return requestBuilder.build();
+    }
+
+    private void setArrayAdapterToMemberListView(List<String> memberList) {
+        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, memberList) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -283,23 +237,18 @@ public class ClubDetailActivity extends AppCompatActivity {
         };
         mListView.setAdapter(arrayAdapter);
     }
-//
+
+
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(),mClub.getId());
-        setTexts();
+        refreshData();
     }
 
-    public int getConfirmationIdFromHeaderResponse(Header[] headers){
-        int id = 0;
-        for (int i=0 ; i<headers.length; i++ ){
-            if(headers[i].getName().equals("Location")){
-                String address = headers[i].getValue();
-                id = Integer.valueOf(address.substring(address.lastIndexOf('/')+1));
-                return id;
-            }
+    public static void backgroundThreadShortToast(final Context context,
+                                                  final String msg) {
+        if (context != null && msg != null) {
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
         }
-        return id;
     }
 }

@@ -57,7 +57,7 @@ public class ClubListRecyclerViewAdapter extends RecyclerView.Adapter<ClubListRe
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(mContext, ClubDetailActivity.class);
-                intent.putExtra("Club",mClubList.get(position));
+                intent.putExtra("clubId", mClubList.get(position).getId());
                 mContext.startActivity(intent);
             }
         });

@@ -5,14 +5,9 @@ import android.content.res.Resources;
 
 import com.fraczekkrzysztof.gocycling.R;
 
-import java.io.IOException;
-
-import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.Route;
 
 
 public class GoCyclingHttpClientHelper {
@@ -23,12 +18,16 @@ public class GoCyclingHttpClientHelper {
     }
 
     private static OkHttpClient createInstance(final Resources res) {
-        return new OkHttpClient.Builder().authenticator(new Authenticator() {
-            public Request authenticate(Route route, Response response) throws IOException {
-                String credential = Credentials.basic(res.getString(R.string.api_user), res.getString(R.string.api_password));
-                return response.request().newBuilder().header("Authorization", credential).build();
-            }
-        }).build();
+        return new OkHttpClient.Builder().authenticator((route, response) -> {
+            String credential = Credentials.basic(res.getString(R.string.api_user), res.getString(R.string.api_password));
+            return response.request().newBuilder().header("Authorization", credential).build();
+        }).addInterceptor(chain -> {
+            Request request = chain.request().newBuilder()
+                    .addHeader("Content-Type", "application/json;charset=UTF-8")
+                    .build();
+            return chain.proceed(request);
+        }).
+                build();
     }
 
     public static OkHttpClient getInstance(Resources res) {
