@@ -23,7 +23,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
+import com.fraczekkrzysztof.gocycling.clubs.ClubListActivity;
 import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.LocationDto;
 import com.fraczekkrzysztof.gocycling.model.v2.club.ClubDto;
 import com.fraczekkrzysztof.gocycling.model.v2.club.ClubResponse;
 import com.fraczekkrzysztof.gocycling.model.v2.club.MemberDto;
@@ -56,6 +58,7 @@ public class ClubDetailActivity extends AppCompatActivity {
     TextView mLocation;
     TextView mDetails;
     long clubId;
+    ClubDto mClubDto;
     Button mJoinButton;
     ImageButton mLocationButton;
     ListView mListView;
@@ -105,6 +108,7 @@ public class ClubDetailActivity extends AppCompatActivity {
                     Reader receivedResponse = response.body().charStream();
                     ClubResponse apiResponse = gson.fromJson(receivedResponse, ClubResponse.class);
                     runOnUiThread(() -> {
+                        mClubDto = apiResponse.getClub();
                         setFields(apiResponse.getClub());
                         mSwipeRefreshLayout.setRefreshing(false);
                         return;
@@ -147,7 +151,7 @@ public class ClubDetailActivity extends AppCompatActivity {
     }
 
     private SwipeRefreshLayout.OnRefreshListener onRefresListener = () -> {
-            Log.d(TAG, "onRefresh: refreshing");
+        Log.d(TAG, "onRefresh: refreshing");
         refreshData();
     };
 
@@ -173,10 +177,13 @@ public class ClubDetailActivity extends AppCompatActivity {
     }
 
     private View.OnClickListener showLocationButtonListener = view -> {
-            Intent showLocation = new Intent(ClubDetailActivity.this, MapsActivity.class);
-        //TODO create object with details about locality and pass it here
-        //showLocation.putExtra("Club", mClub);
-            startActivity(showLocation);
+        Intent showLocation = new Intent(ClubDetailActivity.this, MapsActivity.class);
+        showLocation.putExtra("location", LocationDto.builder()
+                .latitude(mClubDto.getLatitude())
+                .longitude(mClubDto.getLongitude())
+                .description(mClubDto.getLocation())
+                .build());
+        startActivity(showLocation);
     };
 
     private View.OnClickListener joinedButtonClickedListener = view -> manageUserMembership();
@@ -243,6 +250,11 @@ public class ClubDetailActivity extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         refreshData();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ClubDetailActivity.this, ClubListActivity.class));
     }
 
     public static void backgroundThreadShortToast(final Context context,

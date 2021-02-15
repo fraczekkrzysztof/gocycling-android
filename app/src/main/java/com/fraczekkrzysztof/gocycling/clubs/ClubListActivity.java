@@ -112,6 +112,7 @@ public class ClubListActivity extends AppCompatActivity {
             urlBuilder.addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
         }
         urlBuilder.addQueryParameter("page", String.valueOf(page));
+        urlBuilder.addQueryParameter("sort", "created,desc");
         return new Request.Builder()
                 .url(urlBuilder.build().toString())
                 .build();

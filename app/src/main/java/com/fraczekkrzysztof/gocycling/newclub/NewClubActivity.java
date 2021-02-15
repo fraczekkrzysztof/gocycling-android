@@ -4,6 +4,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -17,34 +19,40 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.clubs.ClubListActivity;
-import com.fraczekkrzysztof.gocycling.event.EventListActivity;
+import com.fraczekkrzysztof.gocycling.clubdetails.ClubDetailActivity;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubDto;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.TextHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.entity.StringEntity;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class NewClubActivity extends AppCompatActivity {
 
+    private final Gson gson = new Gson();
     private static final String TAG = "NewClubActivity";
     private EditText mEditTextName;
     private EditText mEditTextLocation;
@@ -93,12 +101,9 @@ public class NewClubActivity extends AppCompatActivity {
     }
 
 
-    private View.OnClickListener addButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            if (validateFields()) {
-                createEvent();
-            }
+    private View.OnClickListener addButtonListener = view -> {
+        if (validateFields()) {
+            createClub();
         }
     };
 
@@ -107,7 +112,7 @@ public class NewClubActivity extends AppCompatActivity {
         boolean check2 = validateEditTextIsEmpty(mEditTextLocation);
         boolean check4 = (latitude != -999);
         boolean check5 = (longtitude != -999);
-        return check1 && check2 && check4 & check5;
+        return check1 && check2 && check4 && check5;
     }
 
     private boolean validateEditTextIsEmpty(EditText field) {
@@ -120,44 +125,53 @@ public class NewClubActivity extends AppCompatActivity {
         }
     }
 
-    private void createEvent() {
-        try {
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs);
-            JSONObject params = new JSONObject();
-            params.put("name", mEditTextName.getText().toString());
-            params.put("location",mEditTextLocation.getText().toString());
-            params.put("latitude",latitude);
-            params.put("longitude",longtitude);
-            params.put("owner", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            params.put("details",mEditTextDetails.getText().toString());
-            params.put("privateMode",false);
-            Log.d(TAG, "onClick: " + params.toString());
-            StringEntity stringParams = new StringEntity(params.toString(), "UTF-8");
-            client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    Log.e(TAG, "onFailure: error during creating club " + responseString, throwable);
-                    Toast.makeText(getBaseContext(), "Error during creating club", Toast.LENGTH_SHORT).show();
-                }
+    private void createClub() {
+        ClubDto clubToCreate = ClubDto.builder()
+                .name(mEditTextName.getText().toString())
+                .location(mEditTextLocation.getText().toString())
+                .latitude(latitude)
+                .longitude(longtitude)
+                .ownerId(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .details(mEditTextDetails.getText().toString())
+                .privateMode(false)
+                .build();
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_clubs);
+        HttpUrl url = HttpUrl.parse(requestAddress)
+                .newBuilder().build();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(gson.toJson(clubToCreate), MediaType.parse("application/json; charset=utf-8")))
+                .build();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "onFailure: error during creating club", e);
+                backgroundThreadShortToast(NewClubActivity.this, "Error during creating club");
+            }
 
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                    Toast.makeText(getBaseContext(), "Successfully create club", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(getBaseContext(), ClubListActivity.class);
-                    startActivity(intent);
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "createEvent: error during creating club", e);
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                backgroundThreadShortToast(NewClubActivity.this, "Successfully created club");
+                ClubResponse apiResponse = gson.fromJson(response.body().string(), ClubResponse.class);
+                Intent intent = new Intent(getBaseContext(), ClubDetailActivity.class);
+                intent.putExtra("clubId", apiResponse.getClub().getId());
+                startActivity(intent);
+            }
+        });
+    }
+
+    public static void backgroundThreadShortToast(final Context context,
+                                                  final String msg) {
+        if (context != null && msg != null) {
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
         }
     }
 
 
     private void startActivityForMapResult() {
         Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
-        PlacesClient placesClient = Places.createClient(getApplicationContext());
+        Places.createClient(getApplicationContext());
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
         Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields).build(NewClubActivity.this);
         startActivityForResult(intent, 123);
@@ -167,55 +181,41 @@ public class NewClubActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case 123:
-                try {
-                    mEditTextLocation.setText("");
-                    latitude = -999;
-                    longtitude = -999;
-                    final Place place = Autocomplete.getPlaceFromIntent(data);
-                    final Dialog dialog = new Dialog(this);
-                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                    /////make map clear
-                    dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-                    dialog.setContentView(R.layout.mapdialog);////your custom content
-                    MapView mMapView = (MapView) dialog.findViewById(R.id.mapdialog_view);
-                    MapsInitializer.initialize(this);
-                    mMapView.onCreate(dialog.onSaveInstanceState());
-                    mMapView.onResume();
+        if (123 == requestCode && data != null) {
+            try {
+                mEditTextLocation.setText("");
+                latitude = -999;
+                longtitude = -999;
+                final Place place = Autocomplete.getPlaceFromIntent(data);
+                final Dialog dialog = new Dialog(this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                /////make map clear
+                dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                dialog.setContentView(R.layout.mapdialog);////your custom content
+                MapView mMapView = (MapView) dialog.findViewById(R.id.mapdialog_view);
+                MapsInitializer.initialize(this);
+                mMapView.onCreate(dialog.onSaveInstanceState());
+                mMapView.onResume();
 
-                    mMapView.getMapAsync(new OnMapReadyCallback() {
-                        @Override
-                        public void onMapReady(final GoogleMap googleMap) {
-                            LatLng posisiabsen = place.getLatLng(); ////your lat lng
-                            googleMap.addMarker(new MarkerOptions().position(posisiabsen).title(place.getAddress()));
-                            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16.0f));
-                            googleMap.getUiSettings().setZoomControlsEnabled(true);
-//                            googleMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
-                        }
-                    });
+                mMapView.getMapAsync(googleMap -> {
+                    LatLng posisiabsen = place.getLatLng(); ////your lat lng
+                    googleMap.addMarker(new MarkerOptions().position(posisiabsen).title(place.getAddress()));
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 16.0f));
+                    googleMap.getUiSettings().setZoomControlsEnabled(true);
+                });
 
-                    dialog.show();
+                dialog.show();
 
-                    Button cancelButton = (Button) dialog.findViewById(R.id.map_dialog_button_cancel);
-                    cancelButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dialog.dismiss();
-                        }
-                    });
-                    Button okButton = (Button) dialog.findViewById(R.id.map_dialog_button_ok);
-                    okButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            setFieldForPlace(place);
-                            dialog.dismiss();
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+                Button cancelButton = (Button) dialog.findViewById(R.id.map_dialog_button_cancel);
+                cancelButton.setOnClickListener(view -> dialog.dismiss());
+                Button okButton = (Button) dialog.findViewById(R.id.map_dialog_button_ok);
+                okButton.setOnClickListener(view -> {
+                    setFieldForPlace(place);
+                    dialog.dismiss();
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "onActivityResult: Error during getting location", e);
+            }
         }
     }
 
@@ -224,6 +224,8 @@ public class NewClubActivity extends AppCompatActivity {
         longtitude = place.getLatLng().longitude;
         mEditTextLocation.setText(place.getAddress());
     }
+
+
 }
 
 
