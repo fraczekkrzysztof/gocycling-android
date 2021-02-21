@@ -7,6 +7,7 @@
     <string name="api_event_confirmed_by_address">api/v2/clubs/%d/events/confirmedBy</string>
     <string name="api_event_address_event_id">api/v2/clubs/%d/events/%d</string>
     <string name="api_event_address_cancel_event">api/v2/clubs/%d/events/%d/cancel</string>
+    <string name="api_event_address_confirmation">api/v2/clubs/%d/events/%d/confirmations</string>
 
 
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>

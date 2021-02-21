@@ -134,7 +134,8 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
                 } else {
                     Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
                     Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
-                    newCityIntent.putExtra("Event", mEventList.get(position));
+                    newCityIntent.putExtra("clubId", mEventList.get(position).getClubId());
+                    newCityIntent.putExtra("eventId", mEventList.get(position).getId());
                     mContext.startActivity(newCityIntent);
                 }
             }

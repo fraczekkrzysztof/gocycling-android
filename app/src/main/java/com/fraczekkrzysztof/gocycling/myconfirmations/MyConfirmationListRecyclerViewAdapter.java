@@ -101,7 +101,8 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
                 } else{
                     Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
                     Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
-                    newCityIntent.putExtra("Event",mEventList.get(position));
+                    newCityIntent.putExtra("eventId", mEventList.get(position));
+                    newCityIntent.putExtra("clubId", mEventList.get(position));
                     mContext.startActivity(newCityIntent);
                 }
             }

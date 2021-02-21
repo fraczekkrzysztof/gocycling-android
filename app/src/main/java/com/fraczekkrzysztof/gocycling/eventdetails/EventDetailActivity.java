@@ -17,58 +17,62 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.MapsActivity;
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.conversation.ConversationListActivity;
-import com.fraczekkrzysztof.gocycling.model.ClubModel;
-import com.fraczekkrzysztof.gocycling.model.ConfirmationModel;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
-import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.event.ConfirmationDto;
+import com.fraczekkrzysztof.gocycling.model.v2.event.EventDto;
+import com.fraczekkrzysztof.gocycling.model.v2.event.EventResponseDto;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.entity.StringEntity;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class EventDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "EventDetailActivity";
-    private long confirmationId = -1;
+
+    private final Gson gson = new Gson();
     TextView mClub;
     TextView mWho;
     TextView mTitle;
     TextView mWhere;
     TextView mWhen;
     TextView mDetails;
-    EventModel mEvent;
-    List<String> mUserConfirmed = new ArrayList<>();
+    long eventId;
+    long clubId;
+    EventDto mEvent;
     Button mConfirmButton;
     ImageButton mLocationButton;
     ImageButton mConversationButton;
     ImageButton mRouteButton;
     ListView mListView;
     SwipeRefreshLayout mSwipeRefreshLayout;
-    AlertDialog mDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: started!");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event_details);
-        mEvent = (EventModel) getIntent().getSerializableExtra("Event");
         mClub = findViewById(R.id.event_detail_club);
         mTitle = findViewById(R.id.event_detail_title);
         mWho = findViewById(R.id.event_detail_who);
@@ -83,26 +87,64 @@ public class EventDetailActivity extends AppCompatActivity {
         mLocationButton = findViewById(R.id.event_detail_show_location);
         mLocationButton.setOnClickListener(showLocationButtonListener);
         mRouteButton = findViewById(R.id.event_detail_show_route);
-        setVisibleOfRouteButton();
         mRouteButton.setOnClickListener(showRouteClickedListener);
-        setDialogMessage();
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
         mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
         getSupportActionBar().setSubtitle("Events details");
+        clubId = getIntent().getLongExtra("clubId", -1);
+        eventId = getIntent().getLongExtra("eventId", -1);
+        getEvent(clubId, eventId);
     }
 
-    private void setVisibleOfRouteButton() {
-        if (mEvent.getRouteLink() == null || mEvent.getRouteLink().equals("")) {
+    private void setVisibleOfRouteButton(EventDto event) {
+        if (event.getRouteLink() == null || event.getRouteLink().equals("")) {
             mRouteButton.setVisibility(View.INVISIBLE);
         }
     }
 
-    private SwipeRefreshLayout.OnRefreshListener onRefresListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
-            Log.d(TAG, "onRefresh: refreshing");
-            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(), mEvent.getId());
-        }
+    private void getEvent(long clubId, long eventId) {
+        mSwipeRefreshLayout.setRefreshing(true);
+        Log.d(TAG, "getEvents: called");
+        Request request = prepareEventRequest(clubId, eventId);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "There is an error. Please try again!");
+                Log.e(TAG, "getEvent onFailure: error during retrieving Event", e);
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Successfully received response with Events");
+                    EventResponseDto apiResponse = gson.fromJson(response.body().charStream(), EventResponseDto.class);
+                    runOnUiThread(() -> {
+                        mEvent = apiResponse.getEvent();
+                        setFields(mEvent);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    });
+                    return;
+                }
+                Log.w(TAG, String.format("onResponse: Response reseived but %d status", response.code()));
+                ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "There is an error. Try again");
+            }
+        });
+    }
+
+    private Request prepareEventRequest(long clubId, long eventId) {
+        String request = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_event_address_event_id), clubId, eventId);
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(request).newBuilder();
+        return new Request.Builder()
+                .url(urlBuilder.build().toString())
+                .build();
+    }
+
+    private SwipeRefreshLayout.OnRefreshListener onRefresListener = () -> {
+        Log.d(TAG, "onRefresh: refreshing");
+        refreshData(clubId, eventId);
     };
 
     private void setConfirmationButton(boolean isConfirmed) {
@@ -124,131 +166,42 @@ public class EventDetailActivity extends AppCompatActivity {
 
     }
 
-    private void setTexts() {
-        mTitle.setText(mEvent.getName());
-//        mWhen.setText(DateUtils.SDF_WITH_TIME.format(mEvent.getDateAndTime()));
-        mWhere.setText(mEvent.getPlace());
-        mDetails.setText(mEvent.getDetails());
+    private void setFields(EventDto event) {
+        try {
+            mTitle.setText(event.getName());
+            mWhen.setText(DateUtils.formatDefaultDateToDateWithTime(event.getDateAndTime()));
+            mWhere.setText(event.getPlace());
+            mDetails.setText(event.getDetails());
+            mClub.setText(event.getClubName());
+            mWho.setText(event.getUserName());
+            setConfirmationButton(event.getConfirmationList().stream()
+                    .anyMatch(c -> c.getUserId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())));
+            setArrayAdapterToListOfConfirmedUsers(event.getConfirmationList().stream()
+                    .map(ConfirmationDto::getUserName)
+                    .collect(Collectors.toList()));
+            setVisibleOfRouteButton(event);
+        } catch (ParseException e) {
+            Log.e(TAG, "setFields: Error during parsing received data", e);
+        }
     }
 
-    private void refreshData(String userUid, long eventId) {
-        mSwipeRefreshLayout.setRefreshing(true);
-        findClubInformation(eventId);
-        getCreatorUserName();
-        getInformationAboutUserConfirmation(userUid, eventId);
-        getConfirmedUser();
-
+    private void setArrayAdapterToListOfConfirmedUsers(List<String> confirmedUsersNames) {
+        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, confirmedUsersNames) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView text = view.findViewById(android.R.id.text1);
+                text.setTextColor(Color.BLACK);
+                text.setTextSize(Float.parseFloat("15"));
+                return view;
+            }
+        };
+        mListView.setAdapter(arrayAdapter);
     }
 
-    private void getInformationAboutUserConfirmation(String userUid, long eventId) {
-        Log.d(TAG, "getInformationAboutUserConfirmation: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_find_confirmation_by_user_and_event);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + userUid;
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + "id=" + eventId;
-        Log.d(TAG, "getEvents: created request" + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess: This event is already confirmed by user");
-                List<ConfirmationModel> listOfConfirmation = ConfirmationModel.fromJson(response);
-                setConfirmationButton(!listOfConfirmation.isEmpty());
-                if (!listOfConfirmation.isEmpty()) {
-                    confirmationId = listOfConfirmation.get(0).getId();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: error on checking is this event confirmed", throwable);
-            }
-        });
-    }
-
-    private void findClubInformation(long eventId) {
-        Log.d(TAG, "findClubInformation: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_club_for_event);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + eventId;
-        Log.d(TAG, "findClubInformation: created request" + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess: Successfuly get information about club");
-                List<ClubModel> club = ClubModel.fromJson(response);
-                mClub.setText(club.get(0).getName());
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: error during getting club name for event", throwable);
-                if (!responseString.isEmpty()) {
-                    Log.e(TAG, "onFailure: " + responseString);
-                }
-            }
-        });
-
-    }
-
-
-    private void getConfirmedUser() {
-        Log.d(TAG, "getConfirmedUser: called");
-        mUserConfirmed.clear();
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_event_user_confirmed);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "eventId=" + mEvent.getId();
-        Log.d(TAG, "getConfirmedUser: created request" + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                List<UserModel> userList = UserModel.fromJsonUserList(response, false);
-                for (UserModel user : userList) {
-                    mUserConfirmed.add(user.getName());
-                }
-                setArrayAdapterToListView();
-                mSwipeRefreshLayout.setRefreshing(false);
-                Log.d(TAG, "onSuccess: Successfully retrieved list of user whose already confirmed event");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                mSwipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "onFailure: There is an error while retrieving list of users whose already confirmed event", throwable);
-            }
-        });
-    }
-
-    private void getCreatorUserName() {
-        Log.d(TAG, "getCreatorUserName: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-        requestAddress = requestAddress + "/" + mEvent.getCreatedBy();
-        Log.d(TAG, "getCreatorUserName: created request" + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                UserModel creator = UserModel.fromJsonUser(response, false);
-                mWho.setText(creator.getName());
-                Log.d(TAG, "onSuccess: Successfully retrieved user who create event");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.e(TAG, "onFailure: There is an error while retrieving user who create event", throwable);
-            }
-        });
+    private void refreshData(long clubId, long eventId) {
+        getEvent(clubId, eventId);
     }
 
     private View.OnClickListener showLocationButtonListener = new View.OnClickListener() {
@@ -269,108 +222,56 @@ public class EventDetailActivity extends AppCompatActivity {
         }
     };
 
-    private View.OnClickListener confirmedButtonClickedListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            try {
-                mSwipeRefreshLayout.setRefreshing(true);
-                AsyncHttpClient client = new AsyncHttpClient();
-                client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-                String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_confirmation_address);
-                if (confirmationId > 0) {
-                    requestAddress = requestAddress + "/" + confirmationId;
-                    client.delete(requestAddress, new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            Log.d(TAG, "onSuccess: successfully delete confirmation");
-                            confirmationId = 0;
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getBaseContext(), "Successfully cancel confirmation", Toast.LENGTH_SHORT).show();
-                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(), mEvent.getId());
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: error during deleting confirmation " + Arrays.toString(responseBody), error);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getApplicationContext(), "Error while canceling confirmation!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    JSONObject params = new JSONObject();
-                    params.put("id", 0);
-                    params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    params.put("event", getResources().getString(R.string.api_event_address) + "/" + mEvent.getId());
-                    Log.d(TAG, "onClick: " + params.toString());
-                    StringEntity stringParams = new StringEntity(params.toString(), "UTF-8");
-                    client.post(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            Log.d(TAG, "onSuccess: Successfully add confirmtion");
-                            confirmationId = getConfirmationIdFromHeaderResponse(headers);
-                            Toast.makeText(EventDetailActivity.this, "Successfully confirmed!", Toast.LENGTH_SHORT).show();
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(), mEvent.getId());
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.e(TAG, "onFailure: " + Arrays.toString(responseBody), error);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(getApplicationContext(), "Error while confirmed!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-
-            } catch (Exception e) {
-                Log.e(TAG, "onClick: Error during confirmation events", e);
+    private View.OnClickListener confirmedButtonClickedListener = view -> {
+        mSwipeRefreshLayout.setRefreshing(true);
+        boolean isConfirmed = mEvent.getConfirmationList().stream()
+                .anyMatch(c -> c.getUserId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()));
+        Request request = prepareRequest(clubId, eventId, isConfirmed);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "Confirmation clicked onFailure: error during confirmation", e);
+                ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "Error occurred. Try again!");
+                mSwipeRefreshLayout.setRefreshing(false);
             }
-        }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Confirmation clicked onResponse: Successfully perform confirmation operation");
+                    runOnUiThread(() -> refreshData(clubId, eventId));
+                    ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "Successfully performed operation!");
+                    return;
+                }
+                Log.w(TAG, String.format("Confirmation clicked onResponse: received response but %d status", response.code()));
+                ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "Error occurred. Try again!");
+            }
+        });
+
+
     };
 
-    private void setArrayAdapterToListView() {
-        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, mUserConfirmed) {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                TextView text = view.findViewById(android.R.id.text1);
-                text.setTextColor(Color.BLACK);
-                text.setTextSize(Float.parseFloat("15"));
-                return view;
-            }
-        };
-        mListView.setAdapter(arrayAdapter);
+    private Request prepareRequest(long clubId, long eventId, boolean isConfirmed) {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_event_address_confirmation), clubId, eventId);
+        HttpUrl url = HttpUrl.parse(requestAddress).newBuilder()
+                .addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .build();
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url);
+        if (isConfirmed) {
+            requestBuilder.delete();
+        } else {
+            requestBuilder.post(RequestBody.create("", null));
+        }
+        return requestBuilder.build();
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        refreshData(FirebaseAuth.getInstance().getCurrentUser().getUid(), mEvent.getId());
-        setTexts();
-    }
-
-    private void setDialogMessage() {
-        String eventDetails = mEvent.getDetails();
-        if (eventDetails == null) {
-            eventDetails = "";
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(eventDetails);
-        builder.setNegativeButton(R.string.close, null);
-
-        mDialog = builder.create();
-    }
-
-    public int getConfirmationIdFromHeaderResponse(Header[] headers) {
-        int id = 0;
-        for (int i = 0; i < headers.length; i++) {
-            if (headers[i].getName().equals("Location")) {
-                String address = headers[i].getValue();
-                id = Integer.valueOf(address.substring(address.lastIndexOf("/") + 1));
-                return id;
-            }
-        }
-        return id;
+        refreshData(clubId, eventId);
     }
 
     private View.OnClickListener showRouteClickedListener = new View.OnClickListener() {
@@ -380,7 +281,7 @@ public class EventDetailActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mEvent.getRouteLink()));
                 startActivity(intent);
             } else {
-                Toast.makeText(EventDetailActivity.this, "Provided link is not viliad!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(EventDetailActivity.this, "Provided link is not valid!", Toast.LENGTH_SHORT).show();
             }
         }
     };
