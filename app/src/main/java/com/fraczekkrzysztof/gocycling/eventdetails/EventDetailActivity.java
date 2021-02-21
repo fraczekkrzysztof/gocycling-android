@@ -216,9 +216,10 @@ public class EventDetailActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             Log.d(TAG, "onClick: clicked on conversation button. For event " + mEvent.getId());
-            Intent newCityIntent = new Intent(EventDetailActivity.this, ConversationListActivity.class);
-            newCityIntent.putExtra("Event", mEvent);
-            startActivity(newCityIntent);
+            Intent conversationIntent = new Intent(EventDetailActivity.this, ConversationListActivity.class);
+            conversationIntent.putExtra("clubId", mEvent.getClubId());
+            conversationIntent.putExtra("eventId", mEvent.getId());
+            startActivity(conversationIntent);
         }
     };
 

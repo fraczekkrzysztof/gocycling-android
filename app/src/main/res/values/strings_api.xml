@@ -8,7 +8,7 @@
     <string name="api_event_address_event_id">api/v2/clubs/%d/events/%d</string>
     <string name="api_event_address_cancel_event">api/v2/clubs/%d/events/%d/cancel</string>
     <string name="api_event_address_confirmation">api/v2/clubs/%d/events/%d/confirmations</string>
-
+    <string name="api_conversation">api/v2/clubs/%d/events/%d/conversations</string>
 
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_event_by_useruid">api/events/search/findByUserUid</string>
@@ -22,7 +22,7 @@
     <string name="api_find_confirmation_by_user_and_event">api/confirmations/search/findByUserUidAndEventId</string>
     <string name="api_users">api/users</string>
     <string name="api_event_user_confirmed">api/users/search/findUserConfirmedEvent</string>
-    <string name="api_conversation">api/conversations</string>
+
     <string name="api_conversation_by_event_id">api/conversations/search/findByEventId</string>
     <string name="api_notifications"></string>
     <string name="api_notification_by_user_uid">api/notifications/search/findByUserUid</string>

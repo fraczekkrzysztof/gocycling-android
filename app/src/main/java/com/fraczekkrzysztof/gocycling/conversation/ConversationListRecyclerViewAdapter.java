@@ -12,20 +12,28 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.model.ConversationModel;
+import com.fraczekkrzysztof.gocycling.model.v2.event.ConversationDto;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.SneakyThrows;
 
 public class ConversationListRecyclerViewAdapter extends RecyclerView.Adapter<ConversationListRecyclerViewAdapter.ViewHolder>{
 
     private static final String TAG = "EventListRVAdapter";
 
-    private List<ConversationModel> mConversationList = new ArrayList<>();
+    private List<ConversationDto> mConversationList = new ArrayList<>();
     private Context mContext;
 
-    public void addConversation(List<ConversationModel> conversationList) {
+    public void addConversation(List<ConversationDto> conversationList) {
         mConversationList.addAll(conversationList);
+        notifyDataSetChanged();
+    }
+
+    public void addSingleConversation(ConversationDto conversation) {
+        mConversationList.add(conversation);
         notifyDataSetChanged();
     }
 
@@ -44,12 +52,12 @@ public class ConversationListRecyclerViewAdapter extends RecyclerView.Adapter<Co
         return new ViewHolder(view);
     }
 
+    @SneakyThrows
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.textAuthor.setText(mConversationList.get(position).getUsername());
-        //TODO add proper conversion
-//        holder.textTime.setText(DateUtils.SDF_WITH_TIME.format( mConversationList.get(position).getCreated()));
+        holder.textAuthor.setText(mConversationList.get(position).getUserName());
+        holder.textTime.setText(DateUtils.formatDefaultDateToDateWithTime(mConversationList.get(position).getCreated()));
         holder.textMessage.setText(mConversationList.get(position).getMessage());
 
 
