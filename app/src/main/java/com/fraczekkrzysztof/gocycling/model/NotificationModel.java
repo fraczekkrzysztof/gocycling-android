@@ -2,8 +2,6 @@ package com.fraczekkrzysztof.gocycling.model;
 
 import android.util.Log;
 
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -89,7 +87,7 @@ public class NotificationModel {
                 notificationModel.setUserUid(notificationObject.getString("userUid"));
                 notificationModel.setTitle(notificationObject.getString("title"));
                 notificationModel.setContent(notificationObject.getString("content"));
-                notificationModel.setCreated(DateUtils.sdfWithFullTime.parse(notificationObject.getString("created")));
+//                notificationModel.setCreated(DateUtils.SDF_WITH_FULL_TIME.parse(notificationObject.getString("created")));
                 notificationModel.setRead(notificationObject.getBoolean("read"));
                 notificationList.add(notificationModel);
             }

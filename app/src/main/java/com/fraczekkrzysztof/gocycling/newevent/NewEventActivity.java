@@ -28,7 +28,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.adapters.ClubAdapter;
 import com.fraczekkrzysztof.gocycling.adapters.RouteAdapter;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
@@ -36,7 +35,6 @@ import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.RouteModel;
 import com.fraczekkrzysztof.gocycling.myevents.MyEventsLists;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -60,7 +58,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
@@ -161,7 +158,7 @@ public class NewEventActivity extends AppCompatActivity {
         if (event == null) return;
         mEditTextName.setText(event.getName());
         mEditTextPlace.setText(event.getPlace());
-        mEditTextDate.setText(DateUtils.sdfWithTime.format(event.getDateAndTime()));
+//        mEditTextDate.setText(DateUtils.SDF_WITH_TIME.format(event.getDateAndTime()));
         mEditTextDetails.setText(event.getDetails());
         mEditTextRoute.setText(event.getRouteLink());
         latitude = event.getLatitude();
@@ -183,7 +180,7 @@ public class NewEventActivity extends AppCompatActivity {
                         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         calendar.set(Calendar.MINUTE, minute);
 
-                        date_time_in.setText(DateUtils.sdfWithTime.format(calendar.getTime()));
+//                        date_time_in.setText(DateUtils.SDF_WITH_TIME.format(calendar.getTime()));
                     }
                 };
 
@@ -245,7 +242,7 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("place", mEditTextPlace.getText().toString());
             params.put("latitude",latitude);
             params.put("longitude",longtitude);
-            params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+//            params.put("dateAndTime", DateUtils.SDF_WITH_FULL_TIME.format(DateUtils.SDF_WITH_TIME.parse(mEditTextDate.getText().toString())));
             params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
@@ -281,12 +278,12 @@ public class NewEventActivity extends AppCompatActivity {
             params.put("place", mEditTextPlace.getText().toString());
             params.put("latitude",latitude);
             params.put("longitude",longtitude);
-            params.put("dateAndTime", DateUtils.sdfWithFullTime.format(DateUtils.sdfWithTime.parse(mEditTextDate.getText().toString())));
+//            params.put("dateAndTime", DateUtils.SDF_WITH_FULL_TIME.format(DateUtils.SDF_WITH_TIME.parse(mEditTextDate.getText().toString())));
             params.put("routeLink",mEditTextRoute.getText());
             params.put("createdBy", FirebaseAuth.getInstance().getCurrentUser().getUid());
             params.put("details", mEditTextDetails.getText().toString());
             params.put("club","api/clubs/"+mSelectedClubId);
-            params.put("updated", DateUtils.sdfWithFullTime.format(new Date()));
+//            params.put("updated", DateUtils.SDF_WITH_FULL_TIME.format(new Date()));
             Log.d(TAG, "onClick: " + params.toString());
             StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
             client.put(getApplicationContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new TextHttpResponseHandler() {
@@ -463,10 +460,11 @@ public class NewEventActivity extends AppCompatActivity {
     }
 
     private void addSingleClubForSpinnerAndBlockIt(ClubModel clubModel) {
-        mSelectedClubId = clubModel.getId();
-        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,Arrays.asList(clubModel));
-        mClubSpinner.setAdapter(clubAdapter);
-        mClubSpinner.setEnabled(false);
+//        TODO fix it later
+//        mSelectedClubId = clubModel.getId();
+//        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,Arrays.asList(clubModel));
+//        mClubSpinner.setAdapter(clubAdapter);
+//        mClubSpinner.setEnabled(false);
     }
 
     private void getClubsForSpinner(){
@@ -503,16 +501,17 @@ public class NewEventActivity extends AppCompatActivity {
     }
 
     private void addClubsToSpinner(List<ClubModel> listClubs) {
-        mListOfClubs = listClubs;
-        List<ClubModel> listOfClubsWithSelectOne = new ArrayList<>();
-        ClubModel fakeClubModel = new ClubModel();
-        fakeClubModel.setId(-1);
-        fakeClubModel.setName("--Pick a club--");
-        listOfClubsWithSelectOne.add(fakeClubModel);
-        listOfClubsWithSelectOne.addAll(listClubs);
-        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,listOfClubsWithSelectOne);
-        mClubSpinner.setAdapter(clubAdapter);
-        mClubSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
+//        TODO fix it later
+//        mListOfClubs = listClubs;
+//        List<ClubModel> listOfClubsWithSelectOne = new ArrayList<>();
+//        ClubModel fakeClubModel = new ClubModel();
+//        fakeClubModel.setId(-1);
+//        fakeClubModel.setName("--Pick a club--");
+//        listOfClubsWithSelectOne.add(fakeClubModel);
+//        listOfClubsWithSelectOne.addAll(listClubs);
+//        ClubAdapter clubAdapter = new ClubAdapter(NewEventActivity.this,R.layout.club_list_item,listOfClubsWithSelectOne);
+//        mClubSpinner.setAdapter(clubAdapter);
+//        mClubSpinner.setOnItemSelectedListener(spinnerItemSelectedListener);
     }
 
     private AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {

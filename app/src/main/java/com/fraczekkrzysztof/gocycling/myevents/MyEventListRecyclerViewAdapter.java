@@ -17,35 +17,42 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
-import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.event.EventDto;
 import com.fraczekkrzysztof.gocycling.newevent.NewEventActivity;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
+import lombok.SneakyThrows;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
-public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEventListRecyclerViewAdapter.ViewHolder>{
+public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEventListRecyclerViewAdapter.ViewHolder> {
 
     private static final String TAG = "EventListRVAdapter";
 
-    private List<EventModel> mEventList = new ArrayList<>();
+    private List<EventDto> mEventList = new ArrayList<>();
     private AlertDialog mDialog;
     private Context mContext;
     private int toDelete;
 
-    public void addEvents(List<EventModel> eventList) {
+    public void addEvents(List<EventDto> eventList) {
         mEventList.addAll(eventList);
         notifyDataSetChanged();
     }
 
-    public void clearEvents(){
+    public void clearEvents() {
         mEventList.clear();
     }
 
@@ -56,18 +63,18 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_my_events_item,parent,false);
-        ViewHolder holder = new ViewHolder(view);
-        return holder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_my_events_item, parent, false);
+        return new ViewHolder(view);
     }
 
+    @SneakyThrows
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
+        holder.textDate.setText(DateUtils.formatDefaultDateToDateWithTime(mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
-        if (mEventList.get(position).isCanceled()){
+        if (mEventList.get(position).isCanceled()) {
             holder.textDate.setTextColor(mContext.getResources().getColor(R.color.hint));
             holder.textTitle.setTextColor(mContext.getResources().getColor(R.color.hint));
         }
@@ -75,7 +82,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Log.d(TAG, "onClick: confirmed canceling " + toDelete);
-                cancelEvent(mEventList.get(toDelete).getId());
+                cancelEvent(mEventList.get(toDelete).getClubId(), mEventList.get(toDelete).getId());
             }
         };
 
@@ -96,7 +103,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             @Override
             public void onClick(View view) {
                 if (mEventList.get(position).isCanceled()) {
-                    Toast.makeText(mContext,"This event is canceled",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "This event is canceled", Toast.LENGTH_SHORT).show();
                 } else {
                     Log.d(TAG, "onClick: canceling event " + position);
                     toDelete = position;
@@ -109,11 +116,11 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             @Override
             public void onClick(View view) {
                 if (mEventList.get(position).isCanceled()) {
-                    Toast.makeText(mContext,"This event is canceled",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "This event is canceled", Toast.LENGTH_SHORT).show();
                 } else {
                     Intent intent = new Intent(mContext, NewEventActivity.class);
                     intent.putExtra("EventToEdit", mEventList.get(position));
-                    intent.putExtra("mode","EDIT");
+                    intent.putExtra("mode", "EDIT");
                     mContext.startActivity(intent);
                 }
             }
@@ -123,7 +130,7 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
             @Override
             public void onClick(View view) {
                 if (mEventList.get(position).isCanceled()) {
-                    Toast.makeText(mContext,"This event is calceled",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "This event is calceled", Toast.LENGTH_SHORT).show();
                 } else {
                     Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
                     Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
@@ -134,32 +141,44 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         });
     }
 
-    private void cancelEvent(long eventId){
+    private void cancelEvent(long clubId, long eventId) {
         Log.d(TAG, "cancelEvent: called");
         setParentRefreshing(true);
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
-        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_cancel_event);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.EVENT_ID + eventId;
-        Log.d(TAG, "cancelEvent: created request " + requestAddress);
-        client.put(requestAddress, new AsyncHttpResponseHandler() {
+        Request request = prepareRequestForCancelEvent(clubId, eventId);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(mContext.getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                Log.d(TAG, "onSuccess: Successfully removed confirmation");
-                if(mContext instanceof MyEventsLists){
-                    ((MyEventsLists)mContext).refreshData();
-                }
-                Toast.makeText(mContext,"Successfully cancel event",Toast.LENGTH_SHORT).show();
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "onFailure: Error during canceling event!", e);
+                ToastUtils.backgroundThreadShortToast(mContext, "Error during canceling events!");
                 setParentRefreshing(false);
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                Log.e(TAG, "onFailure: error during deleting confirmation " +responseBody.toString() , error);
-                Toast.makeText(mContext,"Error during cancel event",Toast.LENGTH_SHORT).show();
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: Successfully canceled Event");
+                    ToastUtils.backgroundThreadShortToast(mContext, "Successfully canceled Event!");
+                    if (mContext instanceof MyEventsLists) {
+                        ((MyEventsLists) mContext).refreshData();
+                    }
+                    setParentRefreshing(false);
+                    return;
+                }
+                Log.w(TAG, String.format("cancelEvent onResponse: received response but %d status", response.code()));
                 setParentRefreshing(false);
+                ToastUtils.backgroundThreadShortToast(mContext, "Error during canceling Event!");
             }
         });
+    }
+
+    Request prepareRequestForCancelEvent(long clubId, long eventId) {
+        String url = mContext.getResources().getString(R.string.api_base_address) +
+                String.format(mContext.getResources().getString(R.string.api_event_address_cancel_event), clubId, eventId);
+        return new Request.Builder()
+                .url(url)
+                .patch(RequestBody.create("", null))
+                .build();
     }
 
     @Override
@@ -167,13 +186,14 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         return mEventList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView textDate;
         TextView textTitle;
         ImageButton mDeleteButton;
         ImageButton mEditButton;
         ConstraintLayout parentLayout;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textDate = itemView.findViewById(R.id.myevent_list_time);
@@ -184,9 +204,9 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
         }
     }
 
-    private void setParentRefreshing(boolean refreshing){
-        if(mContext instanceof MyEventsLists){
-            ((MyEventsLists)mContext).setRefreshing(refreshing);
+    private void setParentRefreshing(boolean refreshing) {
+        if (mContext instanceof MyEventsLists) {
+            ((MyEventsLists) mContext).setRefreshing(refreshing);
         }
     }
 

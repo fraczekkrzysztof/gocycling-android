@@ -29,7 +29,6 @@ import com.fraczekkrzysztof.gocycling.model.ClubModel;
 import com.fraczekkrzysztof.gocycling.model.ConfirmationModel;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.UserModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -127,7 +126,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
     private void setTexts() {
         mTitle.setText(mEvent.getName());
-        mWhen.setText(DateUtils.sdfWithTime.format(mEvent.getDateAndTime()));
+//        mWhen.setText(DateUtils.SDF_WITH_TIME.format(mEvent.getDateAndTime()));
         mWhere.setText(mEvent.getPlace());
         mDetails.setText(mEvent.getDetails());
     }

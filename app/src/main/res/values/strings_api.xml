@@ -2,8 +2,13 @@
 <resources>
     <!--    <string name="api_base_address">https://gocycling.herokuapp.com/</string>-->
     <string name="api_base_address">http://10.0.2.2:8080/</string>
-    <string name="api_event_address">api/events</string>
-    <string name="api_event_current">api/events/search/findCurrent</string>
+    <string name="api_event_address">api/v2/clubs/%d/events</string>
+    <string name="api_event_created_by_address">api/v2/clubs/%d/events/createdBy</string>
+    <string name="api_event_confirmed_by_address">api/v2/clubs/%d/events/confirmedBy</string>
+    <string name="api_event_address_event_id">api/v2/clubs/%d/events/%d</string>
+    <string name="api_event_address_cancel_event">api/v2/clubs/%d/events/%d/cancel</string>
+
+
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_event_by_useruid">api/events/search/findByUserUid</string>
     <string name="api_event_by_useruid_and_clubid">api/events/search/findByUserUidAndClubId</string>

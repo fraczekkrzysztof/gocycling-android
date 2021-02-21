@@ -18,12 +18,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.event.EventListActivity;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
 import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.model.NotificationModel;
-import com.fraczekkrzysztof.gocycling.myconfirmations.MyConfirmationsLists;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.TextHttpResponseHandler;
@@ -68,7 +65,7 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.textDate.setText(DateUtils.sdfWithTime.format( mNotificationList.get(position).getCreated()));
+//        holder.textDate.setText(DateUtils.SDF_WITH_TIME.format( mNotificationList.get(position).getCreated()));
         holder.textTitle.setText(mNotificationList.get(position).getTitle());
 
         if (!mNotificationList.get(position).isRead()){

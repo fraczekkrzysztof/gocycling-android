@@ -2,8 +2,6 @@ package com.fraczekkrzysztof.gocycling.model;
 
 import android.util.Log;
 
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -71,7 +69,7 @@ public class ConversationModel {
                 conversationModel.setId(conversationObject.getLong("id"));
                 conversationModel.setUserUid(conversationObject.getString("userUid"));
                 conversationModel.setUsername(conversationObject.getString("username"));
-                conversationModel.setCreated(DateUtils.sdfWithFullTime.parse(conversationObject.getString("created")));
+//                conversationModel.setCreated(DateUtils.SDF_WITH_FULL_TIME.parse(conversationObject.getString("created")));
                 conversationModel.setMessage(conversationObject.getString("message"));
                 conversationList.add(conversationModel);
             }

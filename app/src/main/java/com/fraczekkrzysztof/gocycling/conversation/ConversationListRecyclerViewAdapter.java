@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.model.ConversationModel;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,8 @@ public class ConversationListRecyclerViewAdapter extends RecyclerView.Adapter<Co
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
         holder.textAuthor.setText(mConversationList.get(position).getUsername());
-        holder.textTime.setText(DateUtils.sdfWithTime.format( mConversationList.get(position).getCreated()));
+        //TODO add proper conversion
+//        holder.textTime.setText(DateUtils.SDF_WITH_TIME.format( mConversationList.get(position).getCreated()));
         holder.textMessage.setText(mConversationList.get(position).getMessage());
 
 

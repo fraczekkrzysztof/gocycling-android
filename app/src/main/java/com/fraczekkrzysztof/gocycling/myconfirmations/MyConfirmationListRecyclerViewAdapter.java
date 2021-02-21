@@ -18,9 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.fraczekkrzysztof.gocycling.model.EventModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -64,7 +63,7 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
+//        holder.textDate.setText(DateUtils.SDF_WITH_TIME.format( mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
         if (mEventList.get(position).isCanceled()){

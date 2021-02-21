@@ -11,19 +11,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.model.ClubModel;
+import com.fraczekkrzysztof.gocycling.model.v2.club.ClubDto;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClubAdapter extends ArrayAdapter<ClubModel> {
+public class ClubAdapter extends ArrayAdapter<ClubDto> {
 
     private final LayoutInflater mInflater;
     private Context mContext;
-    private List<ClubModel> clubsList = new ArrayList<>();
+    private List<ClubDto> clubsList = new ArrayList<>();
     private final int mResource;
 
-    public ClubAdapter(@NonNull Context context, int resource, @NonNull List<ClubModel> objects) {
+    public ClubAdapter(@NonNull Context context, int resource, @NonNull List<ClubDto> objects) {
         super(context, resource, objects);
         mInflater = LayoutInflater.from(context);
         mContext = context;
@@ -38,16 +38,17 @@ public class ClubAdapter extends ArrayAdapter<ClubModel> {
     }
 
     @Override
-    public @NonNull View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public @NonNull
+    View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         return createItemView(position, convertView, parent);
     }
 
-    private View createItemView(int position, View convertView, ViewGroup parent){
+    private View createItemView(int position, View convertView, ViewGroup parent) {
         final View view = mInflater.inflate(mResource, parent, false);
         TextView clubName = view.findViewById(R.id.club_list_item_name);
-        ClubModel currentClub = clubsList.get(position);
-        clubName.setText(currentClub.getName());
+        clubName.setText(clubsList.get(position).getName());
         return view;
     }
+
 
 }

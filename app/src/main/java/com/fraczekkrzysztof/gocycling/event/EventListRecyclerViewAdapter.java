@@ -14,20 +14,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.model.v2.event.EventDto;
 import com.fraczekkrzysztof.gocycling.utils.DateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.SneakyThrows;
+
 public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventListRecyclerViewAdapter.ViewHolder>{
 
     private static final String TAG = "EventListRVAdapter";
 
-    private List<EventModel> mEventList = new ArrayList<>();
+    private List<EventDto> mEventList = new ArrayList<>();
     private Context mContext;
 
-    public void addEvents(List<EventModel> eventList) {
+    public void addEvents(List<EventDto> eventList) {
         mEventList.addAll(eventList);
         notifyDataSetChanged();
     }
@@ -44,14 +46,14 @@ public class EventListRecyclerViewAdapter extends RecyclerView.Adapter<EventList
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.event_list_item,parent,false);
-        ViewHolder holder = new ViewHolder(view);
-        return holder;
+        return new ViewHolder(view);
     }
 
+    @SneakyThrows
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-        holder.textDate.setText(DateUtils.sdfWithTime.format( mEventList.get(position).getDateAndTime()));
+        holder.textDate.setText(DateUtils.formatDefaultDateToDateWithTime(mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {

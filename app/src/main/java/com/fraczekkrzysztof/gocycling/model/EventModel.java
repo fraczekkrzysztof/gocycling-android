@@ -2,8 +2,6 @@ package com.fraczekkrzysztof.gocycling.model;
 
 import android.util.Log;
 
-import com.fraczekkrzysztof.gocycling.utils.DateUtils;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,8 +9,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static android.content.ContentValues.TAG;
 
 public class EventModel implements Serializable {
     private static final String TAG = "EventModel";
@@ -123,7 +119,7 @@ public class EventModel implements Serializable {
                 eventModel.setDetails(eventObject.getString("details"));
                 eventModel.setCreatedBy(eventObject.getString("createdBy"));
                 eventModel.setCanceled(eventObject.getBoolean("canceled"));
-                eventModel.setDateAndTime(DateUtils.sdfWithFullTime.parse(eventObject.getString("dateAndTime")));
+//                eventModel.setDateAndTime(DateUtils.SDF_WITH_FULL_TIME.parse(eventObject.getString("dateAndTime")));
                 eventModel.setRouteLink(eventObject.getString("routeLink"));
                 eventList.add(eventModel);
             }
