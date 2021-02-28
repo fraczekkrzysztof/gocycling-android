@@ -249,8 +249,6 @@ public class EventDetailActivity extends AppCompatActivity {
                 ToastUtils.backgroundThreadShortToast(EventDetailActivity.this, "Error occurred. Try again!");
             }
         });
-
-
     };
 
     private Request prepareRequest(long clubId, long eventId, boolean isConfirmed) {

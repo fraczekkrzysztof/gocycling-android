@@ -17,29 +17,38 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.event.EventDto;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
+import lombok.SneakyThrows;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<MyConfirmationListRecyclerViewAdapter.ViewHolder>{
 
     private static final String TAG = "MyConfirmationListRecyc";
 
-    private List<EventModel> mEventList = new ArrayList<>();
+    private List<EventDto> mEventList = new ArrayList<>();
     private Context mContext;
     private AlertDialog mDialog;
     private int toDelete;
 
 
-    public void addEvents(List<EventModel> eventList) {
+    public void addEvents(List<EventDto> eventList) {
         mEventList.addAll(eventList);
         notifyDataSetChanged();
     }
@@ -56,14 +65,14 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_my_confirmations_item,parent,false);
-        ViewHolder holder = new ViewHolder(view);
-        return holder;
+        return new ViewHolder(view);
     }
 
+    @SneakyThrows
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-//        holder.textDate.setText(DateUtils.SDF_WITH_TIME.format( mEventList.get(position).getDateAndTime()));
+        holder.textDate.setText(DateUtils.formatDefaultDateToDateWithTime(mEventList.get(position).getDateAndTime()));
         holder.textTitle.setText(mEventList.get(position).getName());
 
         if (mEventList.get(position).isCanceled()){
@@ -75,7 +84,7 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Log.d(TAG, "onClick: confirmed deleting " + toDelete);
-                deleteConfirmation(FirebaseAuth.getInstance().getCurrentUser().getUid(),mEventList.get(toDelete));
+                deleteConfirmation(mEventList.get(toDelete));
             }
         };
 
@@ -101,8 +110,8 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
                 } else{
                     Log.d(TAG, "onClick: clicked on " + mEventList.get(position));
                     Intent newCityIntent = new Intent(mContext, EventDetailActivity.class);
-                    newCityIntent.putExtra("eventId", mEventList.get(position));
-                    newCityIntent.putExtra("clubId", mEventList.get(position));
+                    newCityIntent.putExtra("eventId", mEventList.get(position).getId());
+                    newCityIntent.putExtra("clubId", mEventList.get(position).getClubId());
                     mContext.startActivity(newCityIntent);
                 }
             }
@@ -143,27 +152,50 @@ public class MyConfirmationListRecyclerViewAdapter extends RecyclerView.Adapter<
     }
 
 
-    void deleteConfirmation(String userUid, final EventModel event){
+    void deleteConfirmation(final EventDto event) {
         Log.d(TAG, "deleteConfirmation: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
-        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_delete_confirmation_by_user_event);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + ApiUtils.USER_UID + userUid;
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND  + ApiUtils.EVENT_ID + event.getId();
-        Log.d(TAG, "deleteConfirmation: created request " + requestAddress);
-        client.delete(requestAddress, new AsyncHttpResponseHandler() {
+        setParentRefreshing(true);
+        Request request = prepareRequest(event.getClubId(), event.getId());
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(mContext.getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                Log.d(TAG, "onSuccess: Successfully removed confirmation");
-                mEventList.remove(event);
-                notifyDataSetChanged();
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "Confirmation clicked onFailure: error during confirmation", e);
+                ToastUtils.backgroundThreadShortToast(mContext, "Error occurred. Try again!");
+                setParentRefreshing(false);
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                Log.e(TAG, "onFailure: error during deleting confirmation " +responseBody.toString() , error);
-
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Confirmation clicked onResponse: Successfully perform confirmation operation");
+                    notifyParentAboutDataSetChange();
+                    ToastUtils.backgroundThreadShortToast(mContext, "Successfully performed operation!");
+                    return;
+                }
+                Log.w(TAG, String.format("Confirmation clicked onResponse: received response but %d status", response.code()));
+                ToastUtils.backgroundThreadShortToast(mContext, "Error occurred. Try again!");
             }
         });
+    }
+
+    private Request prepareRequest(long clubId, long eventId) {
+        String requestAddress = mContext.getResources().getString(R.string.api_base_address) +
+                String.format(mContext.getResources().getString(R.string.api_event_address_confirmation), clubId, eventId);
+        HttpUrl url = HttpUrl.parse(requestAddress).newBuilder()
+                .addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .build();
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .delete();
+        return requestBuilder.build();
+    }
+
+    private void setParentRefreshing(boolean refreshing) {
+        ((MyConfirmationsLists) mContext).setRefreshing(refreshing);
+    }
+
+    private void notifyParentAboutDataSetChange() {
+        ((MyConfirmationsLists) mContext).notifyAboutDataSetChange();
     }
 }
