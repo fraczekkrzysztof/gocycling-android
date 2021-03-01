@@ -32,4 +32,16 @@ public class DateUtils {
         Date parsedDate = defaultFormat.parse(date);
         return targetFormat.format(parsedDate);
     }
+
+    public static String formatDateWithFullTimeToDefaultTime(String date) throws ParseException {
+        SimpleDateFormat sourceFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        SimpleDateFormat defaultFormat = new SimpleDateFormat(DEFAULT_TIME_FORMAT);
+        Date parsedDate = sourceFormat.parse(date);
+        return defaultFormat.format(parsedDate);
+    }
+
+    public static String formatDateToDateWithTime(Date date) {
+        SimpleDateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        return targetFormat.format(date);
+    }
 }

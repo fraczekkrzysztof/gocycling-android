@@ -11,17 +11,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.model.RouteModel;
+import com.fraczekkrzysztof.gocycling.model.v2.route.RouteDto;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RouteAdapter extends ArrayAdapter<RouteModel> {
+public class RouteAdapter extends ArrayAdapter<RouteDto> {
 
     private Context mContext;
-    private List<RouteModel> routesList = new ArrayList<>();
+    private List<RouteDto> routesList = new ArrayList<>();
 
-    public RouteAdapter(@NonNull Context context, List<RouteModel> list) {
+    public RouteAdapter(@NonNull Context context, List<RouteDto> list) {
         super(context,0,list);
         mContext = context;
         routesList = list;
@@ -34,10 +34,10 @@ public class RouteAdapter extends ArrayAdapter<RouteModel> {
         if(listItem == null)
             listItem = LayoutInflater.from(mContext).inflate(R.layout.route_list_item,parent,false);
 
-        RouteModel currentRoute = routesList.get(position);
+        RouteDto currentRoute = routesList.get(position);
 
         TextView appType = listItem.findViewById(R.id.route_list_source);
-        appType.setText(currentRoute.getAppType());
+        appType.setText(currentRoute.getAppType().name());
         TextView name = listItem.findViewById(R.id.route_list_name);
         name.setText(currentRoute.getName());
         TextView length = listItem.findViewById(R.id.route_list_length);

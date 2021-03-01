@@ -351,8 +351,8 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                     runOnUiThread(() -> {
                         addClubsToSpinner(apiResponse.getClubs());
                         eventListSwipe.setRefreshing(false);
-                        return;
                     });
+                    return;
                 }
                 eventListSwipe.setRefreshing(false);
                 Log.e(TAG, String.format("onResponse: Response with club for spinner received, but %s status.", response.code()));

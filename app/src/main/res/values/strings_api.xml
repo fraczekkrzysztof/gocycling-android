@@ -9,6 +9,7 @@
     <string name="api_event_address_cancel_event">api/v2/clubs/%d/events/%d/cancel</string>
     <string name="api_event_address_confirmation">api/v2/clubs/%d/events/%d/confirmations</string>
     <string name="api_conversation">api/v2/clubs/%d/events/%d/conversations</string>
+    <string name="api_external_routes_list">api/v2/users/%s/externalRoutes</string>
 
     <string name="api_event_confirmed">api/events/search/findConfirmedByUserUid</string>
     <string name="api_event_by_useruid">api/events/search/findByUserUid</string>
@@ -32,7 +33,6 @@
     <string name="api_strava_authorization_link">api/strava/authorizationLink</string>
     <string name="api_strava_process_access_code">api/strava/accessToken</string>
     <string name="api_strava_deauthorize">api/strava/deauthorize</string>
-    <string name="api_external_routes_list">api/custom/externalroutes/list</string>
     <string name="api_clubs">api/v2/clubs</string>
     <string name="api_members">api/v2/clubs/%d/members</string>
     <string name="api_club_for_event">api/clubs/search/findClubForEventId</string>

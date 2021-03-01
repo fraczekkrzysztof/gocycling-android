@@ -120,7 +120,6 @@ public class MyEventListRecyclerViewAdapter extends RecyclerView.Adapter<MyEvent
                 } else {
                     Intent intent = new Intent(mContext, NewEventActivity.class);
                     intent.putExtra("EventToEdit", mEventList.get(position));
-                    intent.putExtra("mode", "EDIT");
                     mContext.startActivity(intent);
                 }
             }
