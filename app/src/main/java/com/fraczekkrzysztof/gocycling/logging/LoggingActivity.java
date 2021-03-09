@@ -15,31 +15,34 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.event.EventListActivity;
-import com.fraczekkrzysztof.gocycling.model.UserModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.user.UserDto;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 import com.fraczekkrzysztof.gocycling.worker.NotificationChecker;
 import com.fraczekkrzysztof.gocycling.worker.NotificationChecker2;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.HttpStatus;
-import cz.msebera.android.httpclient.entity.StringEntity;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class LoggingActivity extends AppCompatActivity {
 
-
+    private final Gson gson = new Gson();
     private static final String TAG = "LoggingActivity";
-    private static final String SHARED_PREFERENCES_STRING = "LoggingPref";
-    private static final String SHARED_PREFERENCES_LOGGED_USER_STRING = "LoggedUserId";
     private static final int RC_SIGN_IN = 1232;
 
     @Override
@@ -48,8 +51,7 @@ public class LoggingActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null){
             Log.d(TAG, "onCreate: user already logged in. Redirect to EventListActivity");
-            checkThatUserExistsOrCreate(user);
-            startApp();
+            createUser(user);
         } else {
             Log.d(TAG, "onCreate: user not logged. Start logging.");
             startLoggingIn();
@@ -100,10 +102,9 @@ public class LoggingActivity extends AppCompatActivity {
             if (resultCode ==RESULT_OK){
 
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                checkThatUserExistsOrCreate(user);
+                createUser(user);
                 Log.d(TAG, "onActivityResult: user successfully logged in " + user.getUid());
                 Toast.makeText(getApplicationContext(),"Successfully logged in!",Toast.LENGTH_SHORT).show();
-                startApp();
             } else {
                 Log.d(TAG, "onActivityResult: " + response.getError().getMessage());
                 Toast.makeText(getApplicationContext(),"Error during logging in!",Toast.LENGTH_SHORT).show();
@@ -111,64 +112,34 @@ public class LoggingActivity extends AppCompatActivity {
         }
     }
 
-    private void checkThatUserExistsOrCreate(final FirebaseUser user){
-        try{
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-            requestAddress = requestAddress + "/" + user.getUid();
-            Log.d(TAG, "checkThatUserExistsOrCreate: request addres");
-            client.get(requestAddress, new JsonHttpResponseHandler(){
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    Log.d(TAG, "onSuccess: Successfully return user list");
-                    super.onSuccess(statusCode, headers, response);
-                    UserModel userModel = UserModel.fromJsonUser(response,true);
-                    if (userModel.getId().equals(user.getUid())){
-                        Log.d(TAG, "onSuccess: user already exists in database");
-                        return;
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    if (statusCode == HttpStatus.SC_NOT_FOUND){
-                        Log.d(TAG, "onFailure: user don't exist. Start saving into db");
-                        createUser(user);
-                    } else {
-                        Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
-                        super.onFailure(statusCode, headers, responseString, throwable);    
-                    }
-                    
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "checkThatUserExistsOrCreate: error during checking that user exists in database", e);
-        }
-    }
     private void createUser(FirebaseUser user){
-        try{
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-            JSONObject params = new JSONObject();
-            params.put("id", user.getUid());
-            params.put("name", user.getDisplayName());
-            Log.d(TAG, "onClick: " + params.toString());
-            StringEntity stringParams = new StringEntity(params.toString(),"UTF-8");
-            client.post(getBaseContext(), requestAddress, stringParams, "application/json;charset=UTF-8", new AsyncHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.d(TAG, "onSuccess: successfuly saved user in db");
-                }
+        Request request = prepareRequest(user);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "createUser onFailure: error during creating user", e);
+                ToastUtils.backgroundThreadShortToast(LoggingActivity.this, "Error during storing user in application");
+            }
 
-                @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.e(TAG, "onFailure: error during saving user to db", error);
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "createUser onResponse: user successfully created");
+                } else if (409 == response.code()) {
+                    Log.d(TAG, "createUser onResponse: user already exists in application database");
                 }
-            });
-        } catch (Exception e){
-            Log.e(TAG, "createUser: error during creating user", e);
-        }
+                startApp();
+            }
+        });
+    }
+
+    private Request prepareRequest(FirebaseUser user) {
+        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
+        UserDto userDto = UserDto.builder().id(user.getUid()).name(user.getDisplayName()).build();
+        return new Request.Builder()
+                .url(requestAddress)
+                .post(RequestBody.create(gson.toJson(userDto), MediaType.parse("application/json;charset=UTF-8")))
+                .build();
     }
 }

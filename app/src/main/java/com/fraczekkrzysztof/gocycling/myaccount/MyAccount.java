@@ -1,12 +1,7 @@
 package com.fraczekkrzysztof.gocycling.myaccount;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,35 +9,39 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.model.UserModel;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.route.ExternalApps;
+import com.fraczekkrzysztof.gocycling.model.v2.strava.AccessTokenRequestDto;
+import com.fraczekkrzysztof.gocycling.model.v2.user.UserDto;
+import com.fraczekkrzysztof.gocycling.model.v2.user.UserResponseDto;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.HttpStatus;
-import cz.msebera.android.httpclient.entity.StringEntity;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MyAccount extends AppCompatActivity {
 
     private static final String TAG = "MyAccount";
+    private final Gson gson = new Gson();
     private EditText mEditTextUserName;
     private Button mUpdateButton;
     private Button mStravaButton;
@@ -54,6 +53,7 @@ public class MyAccount extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_account);
         mSwipeRefreshLayout = findViewById(R.id.my_account_swipe_refresh);
+        mSwipeRefreshLayout.setOnRefreshListener(mOnRefreshListener);
         mEditTextUserName = findViewById(R.id.myaccount_name);
         mUpdateButton = findViewById(R.id.my_account_update_button);
         mUpdateButton.setOnClickListener(updateButtonListener);
@@ -64,173 +64,150 @@ public class MyAccount extends AppCompatActivity {
 
     }
 
-    SwipeRefreshLayout.OnRefreshListener mOnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
-            refreshData();
-        }
-    };
-    private void getUserInfo(final FirebaseUser user){
-        try{
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-            requestAddress = requestAddress + "/" + user.getUid();
-            Log.d(TAG, "getUserInfo: request address " + requestAddress);
-            client.get(requestAddress, new JsonHttpResponseHandler(){
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    Log.d(TAG, "onSuccess: Successfully return user list");
-                    super.onSuccess(statusCode, headers, response);
-                    UserModel userModel = UserModel.fromJsonUser(response,true);
-                    if (userModel.getId().equals(user.getUid())){
-                        setUserInformation(userModel);
-                    }
+    SwipeRefreshLayout.OnRefreshListener mOnRefreshListener = this::refreshData;
 
-                }
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                        Log.e(TAG, "onFailure: error during checking, that user exists in db",throwable );
-                        super.onFailure(statusCode, headers, responseString, throwable);
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "getUserInfo: error during checking that user exists in database", e);
-        }
-    }
-    private void setUserInformation(UserModel user){
-        mEditTextUserName.setText(user.getName());
+    private void refreshData() {
+        getUserInfo();
     }
 
-    private View.OnClickListener updateButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            InputMethodManager imm = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-            updateUserData(FirebaseAuth.getInstance().getCurrentUser(),mEditTextUserName.getText().toString());
-        }
-    };
-
-    private void getUserExternalApps(final FirebaseUser user){
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_external_app_list);
-        requestAddress = requestAddress + "?userUid=" + user.getUid();
-        Log.d(TAG, "getUserExternalApps: created request: " + requestAddress);
-        client.get(requestAddress,new JsonHttpResponseHandler(){
+    private void getUserInfo() {
+        mSwipeRefreshLayout.setRefreshing(true);
+        Request request = prepareGetUserRequest();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                Log.d(TAG, "onSuccess: Successfully get response about user external apps");
-                super.onSuccess(statusCode, headers, response);
-                List<String> listOfApps = new ArrayList<>();
-                for (int i = 0; i < response.length(); i++){
-                    try {
-                        listOfApps.add(response.getString(i));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    processUserExternalApps(listOfApps);
-                }
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "getUserInfo onFailure: error during getting user data", e);
+                ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occurred, please try again later!");
                 mSwipeRefreshLayout.setRefreshing(false);
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-//                super.onFailure(statusCode, headers, responseString, throwable);
-                if(statusCode != 404){
-                    Toast.makeText(MyAccount.this,"Error during checking user external apps",Toast.LENGTH_SHORT).show();
-                    if (responseString!= null){
-                        Log.e(TAG, "onFailure: " + responseString);
-                    }
-                    Log.e(TAG, "onFailure: Error during checking user external apps", throwable);
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "getUserInfo onResponse: successfully received response");
+                    UserResponseDto apiResponse = gson.fromJson(response.body().charStream(), UserResponseDto.class);
+                    runOnUiThread(() -> {
+                        setUserInformation(apiResponse.getUser());
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    });
+                    return;
                 }
+                Log.w(TAG, String.format("getUserInfo onResponse: successfully received response but %d status", response.code()));
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }
 
-    private void processUserExternalApps(List<String> userExternalApps){
-        if (userExternalApps.contains("STRAVA")){
+    private Request prepareGetUserRequest() {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_user_details), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        return new Request.Builder()
+                .url(requestAddress)
+                .build();
+    }
+
+    private void setUserInformation(UserDto user) {
+        mEditTextUserName.setText(user.getName());
+        processUserExternalApps(user.getExternalApps());
+    }
+
+    private void processUserExternalApps(List<ExternalApps> userExternalApps) {
+        if (userExternalApps == null) {
+            setStravaButton(false);
+            return;
+        }
+        if (userExternalApps.stream().anyMatch(e -> e.equals(ExternalApps.STRAVA))) {
             setStravaButton(true);
         }
     }
 
-    private void setStravaButton(boolean isStrava){
-        if (isStrava){
+    private void setStravaButton(boolean isStrava) {
+        if (isStrava) {
             isStravaConnected = true;
             mStravaButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
             mStravaButton.setText("DEAUTHORIZE STRAVA");
         } else {
             isStravaConnected = false;
-            Button defbtn=new Button(this);
             mStravaButton.setBackgroundColor(getResources().getColor(R.color.primaryLightColor));
             mStravaButton.setText("CONNECT WITH STRAVA");
         }
     }
-    private void updateUserData(final FirebaseUser user, final String name){
-        try{
-            mSwipeRefreshLayout.setRefreshing(true);
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_users);
-            requestAddress = requestAddress + "/" + user.getUid();
-            JSONObject params = new JSONObject();
-            params.put("name", name);
-            StringEntity stringParams = new StringEntity(params.toString());
-            Log.d(TAG, "updateUserData: request address " + requestAddress);
-            client.put(getBaseContext(), requestAddress, stringParams, "application/json", new AsyncHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.d(TAG, "onSuccess: Successfully updated user info in local db");
-                    updateUserInFirebase(user,name);
-                }
 
-                @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.e(TAG, "onFailure: Error during updating user info",error);
-                    Toast.makeText(getBaseContext(),"Error during updating information!",Toast.LENGTH_SHORT).show();
-                    mSwipeRefreshLayout.setRefreshing(false);
-                }
-            });
-
-        } catch (Exception e){
-            Log.e(TAG, "updateUserData: Error during updating user data!",e);
+    private View.OnClickListener updateButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+            updateUserData(mEditTextUserName.getText().toString());
         }
-    }
+    };
 
-    private void refreshData(){
+    private void updateUserData(final String name) {
         mSwipeRefreshLayout.setRefreshing(true);
-        getUserInfo(FirebaseAuth.getInstance().getCurrentUser());
-        getUserExternalApps(FirebaseAuth.getInstance().getCurrentUser());
+        Request request = prepareUpdateUserRequest(name);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "updateUserDate onFailure: error during updating user data", e);
+                ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occured, try again later!");
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "updateUserData onResponse: successfully received response");
+                    UserResponseDto apiResponse = gson.fromJson(response.body().charStream(), UserResponseDto.class);
+                    runOnUiThread(() -> {
+                        setUserInformation(apiResponse.getUser());
+                        updateUserInFirebase(name);
+                    });
+                    return;
+                }
+                Log.w(TAG, String.format("updateUserData onResponse: successfully received response but %d status", response.code()));
+                mSwipeRefreshLayout.setRefreshing(false);
+
+            }
+        });
     }
 
-    private void updateUserInFirebase(FirebaseUser user, String name){
+    private Request prepareUpdateUserRequest(String name) {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_user_details), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        return new Request.Builder()
+                .url(requestAddress)
+                .patch(RequestBody.create(gson.toJson(UserDto.builder().name(name).build()), MediaType.parse("application/json;charset=UTF-8")))
+                .build();
+    }
+
+    private void updateUserInFirebase(String name) {
         mSwipeRefreshLayout.setRefreshing(true);
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                 .setDisplayName(name)
                 .build();
-
-        user.updateProfile(profileUpdates)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "onComplete: User profile updated.");
-                            Toast.makeText(getBaseContext(),"Successfully updated information!",Toast.LENGTH_SHORT).show();
-                        } else {
-                            Log.d(TAG, "onComplete: Error during updating user profile. " + task.getException());
-                        }
-                        mSwipeRefreshLayout.setRefreshing(false);
+        FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileUpdates)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "onComplete: User profile updated.");
+                        runOnUiThread(() -> {
+                            ToastUtils.backgroundThreadShortToast(MyAccount.this, "Successfully updated information!");
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        });
+                        return;
                     }
+                    Log.d(TAG, "onComplete: Error during updating user profile. " + task.getException());
+                    mSwipeRefreshLayout.setRefreshing(false);
                 });
     }
 
     View.OnClickListener stravaButtonClickedListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if (!isStravaConnected){
+            if (!isStravaConnected) {
                 getStravaAuthorizationLink();
             } else {
                 deauthorizeStrava();
@@ -238,102 +215,125 @@ public class MyAccount extends AppCompatActivity {
         }
     };
 
-    private void getStravaAuthorizationLink(){
+    private void getStravaAuthorizationLink() {
         mSwipeRefreshLayout.setRefreshing(true);
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_strava_authorization_link);
-        Log.d(TAG, "getStravaAuthorizationLink: created request: " + requestAddress);
-        client.get(requestAddress, new TextHttpResponseHandler() {
+        Request request = prepareStarvaAuthorizathionLinkRequest();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Log.e(TAG, "onFailure: Error during get authorization link",throwable);
-                if (responseString != null){
-                    Log.e(TAG, "onFailure: " + responseString);
-                }
-                Toast.makeText(getBaseContext(),"Error during get authorization link!",Toast.LENGTH_SHORT).show();
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "getStravaAuthorizationLink onFailure: error during retreiving Strava authorization link", e);
+                ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occurred, try again later!");
                 mSwipeRefreshLayout.setRefreshing(false);
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                Intent stravaIntent = new Intent(Intent.ACTION_VIEW,Uri.parse(responseString));
-                startActivity(stravaIntent);
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "getStravaAuthorizationLInk onResponse: successfully received response with strava authorization link");
+                    String authorizationLink = response.body().string();
+                    runOnUiThread(() -> {
+                        Intent stravaIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(authorizationLink));
+                        startActivity(stravaIntent);
+                    });
+                    return;
+                }
+                Log.d(TAG, String.format("getStravaAuthorizationLink onResponse: Received response but %d status.", response.code()));
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }
 
-    private void processAccessCode(Uri uri){
-        try {
-            String code = uri.getQueryParameter("code");
-            if (code != null){
-                mSwipeRefreshLayout.setRefreshing(true);
-                AsyncHttpClient client = new AsyncHttpClient();
-                client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-                String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_strava_process_access_code);
-                Log.d(TAG, "processAccessCode: created request: " + requestAddress);
-                JSONObject params = new JSONObject();
-                params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                params.put("accessToken",code);
-                StringEntity stringParams = new StringEntity(params.toString());
-                client.post(getBaseContext(), requestAddress, null, stringParams, "application/json", new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        Log.d(TAG, "onSuccess: Successfully connect strava");
-                        Toast.makeText(getApplicationContext(),"Successfully connected with Strava!",Toast.LENGTH_SHORT).show();
-                        setStravaButton(true);
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.e(TAG, "onFailure: Error during authorizing strava!", error);
-                        String errorRespone = new String(responseBody);
-                        if (errorRespone != null && errorRespone != ""){
-                            Log.e(TAG, "onFailure: " + errorRespone);
-                        }
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                });
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "processAccessCode: error during proccess access code!",e );
-        }
+    private Request prepareStarvaAuthorizathionLinkRequest() {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                getResources().getString(R.string.api_strava_authorization_link);
+        return new Request.Builder()
+                .url(requestAddress)
+                .build();
     }
 
-    private void deauthorizeStrava(){
-        try {
+    private void processAccessCode(Uri uri) {
+        String code = uri.getQueryParameter("code");
+        if (code != null) {
             mSwipeRefreshLayout.setRefreshing(true);
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setBasicAuth(getResources().getString(R.string.api_user), getResources().getString(R.string.api_password));
-            String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_strava_deauthorize);
-            requestAddress = requestAddress + "?userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
-            Log.d(TAG, "deauthorizeStrava: created request: " + requestAddress);
-            JSONObject params = new JSONObject();
-            params.put("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid());
-            StringEntity stringParams = new StringEntity(params.toString());
-            client.post(getBaseContext(), requestAddress, null, stringParams, "application/json", new AsyncHttpResponseHandler() {
+            Request request = prepareStravaProcessAccessCodeRequest(code);
+            OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+            httpClient.newCall(request).enqueue(new Callback() {
                 @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.d(TAG, "onSuccess: Successfully deauthorize strava");
-                    Toast.makeText(getApplicationContext(),"Successfully deauthorize strava",Toast.LENGTH_SHORT).show();
-                    setStravaButton(false);
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    Log.e(TAG, "processAccessCode onFailure: error during processing access code", e);
+                    ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occurred. Try again later!");
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.e(TAG, "onFailure: Error during deauthorizing strava!", error);
-                    String errorRespone = new String(responseBody);
-                    if (errorRespone != null && errorRespone != ""){
-                        Log.e(TAG, "onFailure: " + errorRespone);
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        Log.d(TAG, "processAccessCode onResponse: successfully received response with processed access code");
+                        runOnUiThread(() -> {
+                            ToastUtils.backgroundThreadShortToast(MyAccount.this, "Successfully connected Strava!");
+                            setStravaButton(true);
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        });
+                        return;
                     }
+                    Log.w(TAG, String.format("processAccessCOde onResponse: received response but %d status", response.code()));
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
             });
-        } catch (Exception e) {
-            Log.e(TAG, "deauthorizeStrava: Error during deauthorizing strava",e );
         }
+    }
+
+    private Request prepareStravaProcessAccessCodeRequest(String code) {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                getResources().getString(R.string.api_strava_process_access_code);
+        AccessTokenRequestDto requestBody = new AccessTokenRequestDto(FirebaseAuth.getInstance().getCurrentUser().getUid(), code);
+        return new Request.Builder()
+                .url(requestAddress)
+                .post(RequestBody.create(gson.toJson(requestBody), MediaType.parse("application/json;charset=UTF-8")))
+                .build();
+
+    }
+
+    private void deauthorizeStrava() {
+        mSwipeRefreshLayout.setRefreshing(true);
+        Request request = prepareDeauthorizeStravaRequest();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "deauthorizeStrava onFailure: error occurred during deauthorizing strava", e);
+                ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occurred during deathorizing Strava. Try again later!");
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "deauthorizeStrava onResponse: Successfully received response with Strava deauthorizing");
+                    runOnUiThread(() -> {
+                        ToastUtils.backgroundThreadShortToast(MyAccount.this, "Successfully deauthorize Strava");
+                        setStravaButton(false);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    });
+                    return;
+                }
+                Log.w(TAG, String.format("deauthorizeStrava onResponse: received reponse with deauthorizing Strava but %d status.", response.code()));
+                ToastUtils.backgroundThreadShortToast(MyAccount.this, "Error occurred during deauthorizing Strava. Try again later!");
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    Request prepareDeauthorizeStravaRequest() {
+        HttpUrl url = HttpUrl.parse(getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_strava_deauthorize)).newBuilder()
+                .addQueryParameter("userUid", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .build();
+        return new Request.Builder()
+                .url(url)
+                .post(RequestBody.create("", MediaType.parse("application/json;charset=UTF-8")))
+                .build();
+
     }
 
     @Override
@@ -341,7 +341,7 @@ public class MyAccount extends AppCompatActivity {
         super.onPostResume();
         refreshData();
         Uri uri = getIntent().getData();
-        if (uri != null && uri.toString().startsWith(getResources().getString(R.string.redirect_uri_strava))){
+        if (uri != null && uri.toString().startsWith(getResources().getString(R.string.redirect_uri_strava))) {
             processAccessCode(uri);
         }
     }

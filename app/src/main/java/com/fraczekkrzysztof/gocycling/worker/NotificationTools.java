@@ -3,19 +3,19 @@ package com.fraczekkrzysztof.gocycling.worker;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
-import android.os.Looper;
 import android.util.Log;
 
 import com.fraczekkrzysztof.gocycling.R;
 import com.fraczekkrzysztof.gocycling.androidnotification.NotificationHelper;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
 import com.fraczekkrzysztof.gocycling.usernotifications.NotificationLists;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.SyncHttpClient;
 
-import cz.msebera.android.httpclient.Header;
+import java.io.IOException;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class NotificationTools extends ContextWrapper{
 
@@ -52,26 +52,23 @@ public class NotificationTools extends ContextWrapper{
     }
 
     public void getMaxNotificationIdForUser(){
-        AsyncHttpResponseHandler responseHandler = new AsyncHttpResponseHandler(Looper.getMainLooper()) {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                Log.d(TAG, "onSuccess: Successfully get max notification id for user " + new String(responseBody));
-                doActionForSuccess(Long.valueOf(new String(responseBody)));
+        Request request = prepareRequestForMaxNotification();
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        try {
+            Response response = httpClient.newCall(request).execute();
+            if (response.isSuccessful()) {
+                doActionForSuccess(Long.valueOf(response.body().string()));
             }
+        } catch (IOException e) {
+            Log.e(TAG, "getMaxNotificationIdForUser: error during retrieving max notification id for user", e);
+        }
+    }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                Log.e(TAG, "onFailure: error during getting max notification id",error);
-                if (responseBody != null) {
-                    Log.e(TAG, "onFailure: " + responseBody.toString()); }
-            }
-        };
-        responseHandler.setUseSynchronousMode(true);
-        AsyncHttpClient client = new SyncHttpClient();
-        client.setBasicAuth(getApplicationContext().getResources().getString(R.string.api_user), getApplicationContext().getResources().getString(R.string.api_password));
-        String requestAddress = getApplicationContext().getResources().getString(R.string.api_base_address) + getApplicationContext().getResources().getString(R.string.api_notification_max_id_for_user);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
-        Log.d(TAG, "getMaxNotificationIdForUser: " + requestAddress);
-        client.get(requestAddress, responseHandler);
+    private Request prepareRequestForMaxNotification() {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_notification_max_id_for_user), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        return new Request.Builder()
+                .url(requestAddress)
+                .build();
     }
 }
