@@ -89,7 +89,7 @@ public class EventDetailActivity extends AppCompatActivity {
         mRouteButton = findViewById(R.id.event_detail_show_route);
         mRouteButton.setOnClickListener(showRouteClickedListener);
         mSwipeRefreshLayout = findViewById(R.id.event_detail_swipe_layout);
-        mSwipeRefreshLayout.setOnRefreshListener(onRefresListener);
+        mSwipeRefreshLayout.setOnRefreshListener(onRefreshListener);
         getSupportActionBar().setSubtitle("Events details");
         clubId = getIntent().getLongExtra("clubId", -1);
         eventId = getIntent().getLongExtra("eventId", -1);
@@ -142,7 +142,7 @@ public class EventDetailActivity extends AppCompatActivity {
                 .build();
     }
 
-    private SwipeRefreshLayout.OnRefreshListener onRefresListener = () -> {
+    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = () -> {
         Log.d(TAG, "onRefresh: refreshing");
         refreshData(clubId, eventId);
     };
@@ -163,7 +163,12 @@ public class EventDetailActivity extends AppCompatActivity {
     private void setConfirmedButtonToNotConfirmed() {
         mConfirmButton.setText("CONFIRM");
         mConfirmButton.setBackgroundColor(getResources().getColor(R.color.primaryDarkColor));
+    }
 
+    private void setConfirmationButtonToInformAboutCanceledEvent() {
+        mConfirmButton.setText("EVENT CANCELED");
+        mConfirmButton.setBackgroundColor(getResources().getColor(R.color.secondaryDarkColor));
+        mConfirmButton.setEnabled(false);
     }
 
     private void setFields(EventDto event) {
@@ -174,6 +179,11 @@ public class EventDetailActivity extends AppCompatActivity {
             mDetails.setText(event.getDetails());
             mClub.setText(event.getClubName());
             mWho.setText(event.getUserName());
+            if (event.isCanceled()) {
+                setConfirmationButtonToInformAboutCanceledEvent();
+                mConversationButton.setVisibility(View.INVISIBLE);
+                return;
+            }
             setConfirmationButton(event.getConfirmationList().stream()
                     .anyMatch(c -> c.getUserId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())));
             setArrayAdapterToListOfConfirmedUsers(event.getConfirmationList().stream()
@@ -184,6 +194,7 @@ public class EventDetailActivity extends AppCompatActivity {
             Log.e(TAG, "setFields: Error during parsing received data", e);
         }
     }
+
 
     private void setArrayAdapterToListOfConfirmedUsers(List<String> confirmedUsersNames) {
         ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, confirmedUsersNames) {
