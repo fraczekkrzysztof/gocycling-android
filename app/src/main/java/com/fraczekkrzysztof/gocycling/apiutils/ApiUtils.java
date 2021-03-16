@@ -1,5 +1,9 @@
 package com.fraczekkrzysztof.gocycling.apiutils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApiUtils {
 
     public static final String PARAMS_START = "?";

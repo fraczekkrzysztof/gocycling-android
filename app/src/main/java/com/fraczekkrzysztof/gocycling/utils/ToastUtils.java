@@ -5,6 +5,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ToastUtils {
 
     public static void backgroundThreadShortToast(final Context context,

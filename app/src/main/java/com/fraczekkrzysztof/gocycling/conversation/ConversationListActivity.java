@@ -182,7 +182,7 @@ public class ConversationListActivity extends AppCompatActivity {
         getConversation(0, false);
     }
 
-    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = () -> refreshData();
+    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = this::refreshData;
 
     private View.OnClickListener sendButtonClickedListener = view -> {
         Log.d(TAG, "onClick: sending message");

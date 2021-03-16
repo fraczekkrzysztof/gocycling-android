@@ -10,12 +10,14 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.fraczekkrzysztof.gocycling.R;
+
+import static java.lang.Thread.sleep;
 
 
 public class NotificationChecker2 extends Service {
@@ -30,59 +32,47 @@ public class NotificationChecker2 extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         tools = new NotificationTools(getApplicationContext());
-        Log.d(TAG, "NotificationChecker2: created successfully");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createChannels();
         }
 
-        Notification notification = new NotificationCompat.Builder(this,NOT_CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, NOT_CHANNEL_ID)
                 .setContentTitle("App is running")
                 .setContentText("Don't kill me for receiving all notification as soon as possible")
                 .setSmallIcon(R.drawable.chain)
                 .build();
 
-        startForeground(1,notification);
+        startForeground(1, notification);
 
-        if(mThread != null){
+        if (mThread != null) {
             mThread.interrupt();
-            while (mThread.isInterrupted()){
+            while (mThread.isInterrupted()) {
                 try {
                     Log.d(TAG, "onStartCommand: Thread is still running. Waiting for finish.");
-                    Thread.currentThread().sleep(1000);
+                    sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
-        mThread = new Thread(){
+        mThread = new Thread() {
             @Override
             public void run() {
-                try{
-                    while(true){
+                try {
+                    while (true) {
                         tools.getMaxNotificationIdForUser();
                         Log.d(TAG, "Successfully finished sync job");
-                        Thread.currentThread().sleep(120000);
+                        sleep(120000);
                     }
-                } catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         };
 
         mThread.start();
+        Log.d(TAG, "NotificationChecker2: created successfully");
         return START_NOT_STICKY;
-    }
-
-
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -100,8 +90,8 @@ public class NotificationChecker2 extends Service {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void createChannels(){
-        NotificationChannel notificationChannel = new NotificationChannel(NOT_CHANNEL_ID,NOT_CHANNEL_NAME, NotificationManager.IMPORTANCE_MIN);
+    private void createChannels() {
+        NotificationChannel notificationChannel = new NotificationChannel(NOT_CHANNEL_ID, NOT_CHANNEL_NAME, NotificationManager.IMPORTANCE_MIN);
         notificationChannel.enableLights(true);
         notificationChannel.enableVibration(true);
         notificationChannel.setDescription("Go Cycling Running Notification Channel");
