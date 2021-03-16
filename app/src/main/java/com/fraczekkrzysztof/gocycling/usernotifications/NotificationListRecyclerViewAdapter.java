@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -17,36 +16,42 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
 import com.fraczekkrzysztof.gocycling.eventdetails.EventDetailActivity;
-import com.fraczekkrzysztof.gocycling.model.EventModel;
-import com.fraczekkrzysztof.gocycling.model.NotificationModel;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.TextHttpResponseHandler;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.notificatication.NotificationDto;
+import com.fraczekkrzysztof.gocycling.utils.DateUtils;
+import com.google.firebase.auth.FirebaseAuth;
 
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
+import lombok.SneakyThrows;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
-public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<NotificationListRecyclerViewAdapter.ViewHolder>{
+public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<NotificationListRecyclerViewAdapter.ViewHolder> {
 
     private static final String TAG = "NotificationRVA";
 
-    private List<NotificationModel> mNotificationList = new ArrayList<>();
+    private List<NotificationDto> mNotificationList = new ArrayList<>();
     private Context mContext;
     private AlertDialog mDialog;
 
 
-    public void addNotification(List<NotificationModel> notificationList) {
+    public void addNotification(List<NotificationDto> notificationList) {
         mNotificationList.addAll(notificationList);
         notifyDataSetChanged();
     }
 
-    public void clearNotification(){
+    public void clearNotification() {
         mNotificationList.clear();
     }
 
@@ -57,61 +62,58 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.notification_list_item,parent,false);
-        ViewHolder holder = new ViewHolder(view);
-        return holder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.notification_list_item, parent, false);
+        return new ViewHolder(view);
     }
 
+    @SneakyThrows
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
-//        holder.textDate.setText(DateUtils.SDF_WITH_TIME.format( mNotificationList.get(position).getCreated()));
+        holder.textDate.setText(DateUtils.formatDefaultDateToDateWithTime(mNotificationList.get(position).getCreated()));
         holder.textTitle.setText(mNotificationList.get(position).getTitle());
 
-        if (!mNotificationList.get(position).isRead()){
+        if (!mNotificationList.get(position).isRead()) {
             holder.textDate.setTypeface(null, Typeface.BOLD);
-            holder.textTitle.setTypeface(null,Typeface.BOLD);
+            holder.textTitle.setTypeface(null, Typeface.BOLD);
         } else {
             holder.textDate.setTypeface(null, Typeface.NORMAL);
-            holder.textTitle.setTypeface(null,Typeface.NORMAL);
+            holder.textTitle.setTypeface(null, Typeface.NORMAL);
         }
 
 
-        holder.parentLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                    Log.d(TAG, "onClick: clicked on " + mNotificationList.get(position).getId());
-                    if (!mNotificationList.get(position).isRead()){
-                        Log.d(TAG, "onClick: " + position);
-                        markAsReadOnList(position);
-                        markAsRead(mNotificationList.get(position).getId());
-                    }
-                    buildAndShowDialog(position);
+        holder.parentLayout.setOnClickListener(view -> {
+            Log.d(TAG, "onClick: clicked on " + mNotificationList.get(position).getId());
+            if (!mNotificationList.get(position).isRead()) {
+                Log.d(TAG, "onClick: " + position);
+                markAsReadOnList(position);
+                markAsRead(mNotificationList.get(position).getId());
             }
-        });
+            buildAndShowDialog(position);
 
+        });
     }
 
-    private void buildAndShowDialog(final int position){
+    private void buildAndShowDialog(final int position) {
 
         DialogInterface.OnClickListener positiveAnswerListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Log.d(TAG, "onClick: redirect to confirmation ");
-                getEventDetailsAndStartActivity(mNotificationList.get(position).getId());
+                startActivityForSingleEvent(mNotificationList.get(position).getEventId(), mNotificationList.get(position).getClubId());
             }
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext).setMessage(mNotificationList.get(position).getContent());
         builder.setPositiveButton(R.string.check_details, positiveAnswerListener);
-        builder.setNegativeButton(R.string.close,null);
+        builder.setNegativeButton(R.string.close, null);
 
         mDialog = builder.create();
         mDialog.show();
 
     }
 
-    private void markAsReadOnList(int position){
+    private void markAsReadOnList(int position) {
         mNotificationList.get(position).setRead(true);
         notifyItemChanged(position);
     }
@@ -121,11 +123,12 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
         return mNotificationList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView textDate;
         TextView textTitle;
         ConstraintLayout parentLayout;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textDate = itemView.findViewById(R.id.notification_item_time);
@@ -134,82 +137,42 @@ public class NotificationListRecyclerViewAdapter extends RecyclerView.Adapter<No
         }
     }
 
-    private void markAsRead(final long id){
+    private void markAsRead(final long id) {
         Log.d(TAG, "getNotifications: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
-        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_notification_mark_as_read);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "notificationId=" + id;
-        Log.d(TAG, "getNotifications: created request" + requestAddress);
-        client.put(requestAddress, new TextHttpResponseHandler() {
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                        Log.e(TAG, "onFailure: Error druring marking notification as read",throwable);
-                        if (responseString !=null){
-                            Log.e(TAG, responseString);
-                        }
-                    }
-
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                        Log.d(TAG, "onSuccess: Successfully mark notification as read");
-                    }
-                });
-    }
-
-    private void getEventDetailsAndStartActivity(long id){
-        setParentRefreshing(true);
-        Log.d(TAG, "getSingleEvent: called");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(mContext.getResources().getString(R.string.api_user),mContext.getResources().getString(R.string.api_password));
-        String requestAddress = mContext.getResources().getString(R.string.api_base_address) + mContext.getResources().getString(R.string.api_event_by_notification_id);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "notificationId=" + id;
-        Log.d(TAG, "getSingleEvent: created request " + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler(){
+        Request request = prepareRequestForMarkAsRead(id);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(mContext.getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess: response successfully received");
-                List<EventModel> listEvents = EventModel.fromJson(response);
-                setParentRefreshing(false);
-                startActivityForSingleEvent(listEvents.get(0));
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Toast.makeText(mContext,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
-                Log.e(TAG,"Error during retrieving single event", throwable);
-                if (errorResponse != null){
-                    Log.d(TAG, errorResponse.toString());
-                }
-
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "marksAsRead onFailure: error occurred during marking notification as read", e);
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode,headers,responseString,throwable);
-                Toast.makeText(mContext,"There is an error. Please try again!",Toast.LENGTH_SHORT).show();
-                Log.e(TAG,"Error during retrieving single event", throwable);
-                if (responseString != null){
-                    Log.d(TAG, responseString);
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "markAsRead onResponse: successfully marks notification as read");
+                    return;
                 }
-                setParentRefreshing(false);
+                Log.w(TAG, String.format("markAsRead onResponse: received response but %d status", response.code()));
             }
         });
     }
 
-    private void startActivityForSingleEvent(EventModel event){
-        if (event.isCanceled()){
-            Toast.makeText(mContext,"Event is canceled. You're not able to view details",Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent eventDetails = new Intent(mContext, EventDetailActivity.class);
-        eventDetails.putExtra("Event", event);
-        mContext.startActivity(eventDetails);
+    private Request prepareRequestForMarkAsRead(long id) {
+        String requestAddress = mContext.getResources().getString(R.string.api_base_address) +
+                String.format(mContext.getResources().getString(R.string.api_notification_mark_as_read), FirebaseAuth.getInstance().getCurrentUser(), id);
+        return new Request.Builder()
+                .url(requestAddress)
+                .patch(RequestBody.create("", MediaType.parse("application/json; charset=utf-8")))
+                .build();
     }
 
-    private void setParentRefreshing(boolean refreshing){
-        ((NotificationLists)mContext).setRefreshing(refreshing);
+
+    private void startActivityForSingleEvent(long eventId, long clubId) {
+        Intent eventDetails = new Intent(mContext, EventDetailActivity.class);
+        eventDetails.putExtra("clubid", clubId);
+        eventDetails.putExtra("eventId", eventId);
+        mContext.startActivity(eventDetails);
     }
 
 }

@@ -10,34 +10,39 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.fraczekkrzysztof.gocycling.R;
-import com.fraczekkrzysztof.gocycling.apiutils.ApiUtils;
-import com.fraczekkrzysztof.gocycling.model.NotificationModel;
+import com.fraczekkrzysztof.gocycling.httpclient.GoCyclingHttpClientHelper;
+import com.fraczekkrzysztof.gocycling.model.v2.PageDto;
+import com.fraczekkrzysztof.gocycling.model.v2.notificatication.NotificationListResponseDto;
+import com.fraczekkrzysztof.gocycling.utils.ToastUtils;
 import com.google.firebase.auth.FirebaseAuth;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.google.gson.Gson;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.io.IOException;
 
-import cz.msebera.android.httpclient.Header;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class NotificationLists extends AppCompatActivity {
 
     private static final String TAG = "NotificationLists";
+    private final Gson gson = new Gson();
     private RecyclerView mRecyclerView;
     private NotificationListRecyclerViewAdapter mAdapter;
     private SwipeRefreshLayout mNotificationListSwype;
-    private int page = 0;
-    private int totalPages = 0;
+    private PageDto mPageDto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.notification_list);
         mNotificationListSwype = findViewById(R.id.notification_list_swipe);
-        mNotificationListSwype.setOnRefreshListener(OnRefreshListener);
+        mNotificationListSwype.setOnRefreshListener(onRefreshListener);
         initRecyclerView();
         getSupportActionBar().setSubtitle("Notifications");
     }
@@ -47,7 +52,7 @@ public class NotificationLists extends AppCompatActivity {
         mRecyclerView = findViewById(R.id.notification_recycler_view);
         mAdapter = new NotificationListRecyclerViewAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.setOnScrollListener(prOnScrollListener);
+        mRecyclerView.addOnScrollListener(prOnScrollListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         DividerItemDecoration divider = new DividerItemDecoration(this,DividerItemDecoration.VERTICAL);
         divider.setDrawable(getResources().getDrawable(R.drawable.event_list_divider));
@@ -57,82 +62,85 @@ public class NotificationLists extends AppCompatActivity {
     private void getNotifications(int page){
         Log.d(TAG, "getNotifications: called");
         mNotificationListSwype.setRefreshing(true);
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setBasicAuth(getResources().getString(R.string.api_user),getResources().getString(R.string.api_password));
-        String requestAddress = getResources().getString(R.string.api_base_address) + getResources().getString(R.string.api_notification_by_user_uid);
-        requestAddress = requestAddress + ApiUtils.PARAMS_START + "userUid=" + FirebaseAuth.getInstance().getCurrentUser().getUid();
-        requestAddress = requestAddress + ApiUtils.PARAMS_AND + ApiUtils.getPageToRequest(page);
-        Log.d(TAG, "getNotifications: created request" + requestAddress);
-        client.get(requestAddress, new JsonHttpResponseHandler(){
+        Request request = prepareRequestForNotification(page);
+        OkHttpClient httpClient = GoCyclingHttpClientHelper.getInstance(getResources());
+        httpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.d(TAG, "onSuccess:  response successfully received");
-                List<NotificationModel> listNotification = NotificationModel.fromJson(response);
-                if (totalPages == 0 ){
-                    totalPages = NotificationModel.getTotalPageFromJson(response);
-                }
-                mAdapter.addNotification(listNotification);
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "getNotification onFailure: error during retrieving notification list.", e);
+                ToastUtils.backgroundThreadShortToast(NotificationLists.this, "Error occurred! Try again.");
                 mNotificationListSwype.setRefreshing(false);
             }
+
             @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Log.d(TAG, errorResponse.toString());
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "getNotification onResponse: successfully received response with Notification list");
+                    NotificationListResponseDto apiResponse = gson.fromJson(response.body().charStream(), NotificationListResponseDto.class);
+                    runOnUiThread(() -> {
+                        mPageDto = apiResponse.getPage();
+                        mAdapter.addNotification(apiResponse.getNotifications());
+                        mNotificationListSwype.setRefreshing(false);
+                    });
+                    return;
+                }
+                Log.w(TAG, String.format("getNotification onResponse: received response but %d status", response.code()));
                 mNotificationListSwype.setRefreshing(false);
             }
         });
-
     }
 
-    private SwipeRefreshLayout.OnRefreshListener OnRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
+    private Request prepareRequestForNotification(int page) {
+        String requestAddress = getResources().getString(R.string.api_base_address) +
+                String.format(getResources().getString(R.string.api_notification_by_user_uid), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        HttpUrl url = HttpUrl.parse(requestAddress).newBuilder()
+                .addQueryParameter("sort", "created,desc")
+                .addQueryParameter("page", String.valueOf(page))
+                .build();
+        return new Request.Builder()
+                .url(url)
+                .build();
+    }
+
+    private SwipeRefreshLayout.OnRefreshListener onRefreshListener = () -> {
             Log.d(TAG, "onRefresh: refreshing");
             refreshData();
-        }
     };
 
     private void refreshData(){
         mAdapter.clearNotification();
-        page = 0;
-        totalPages = 0;
         getNotifications(0);
     }
 
     private RecyclerView.OnScrollListener prOnScrollListener = new RecyclerView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-        }
 
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-
-            if(isLastItemDisplaying(recyclerView)){
-                if (page == totalPages - 1){
+            if (isLastItemDisplaying(recyclerView)) {
+                if (mPageDto.getNextPage() == 0) {
                     Log.d(TAG, "There is nothing to load");
                     return;
                 }
-                page++;
-                Log.d(TAG, "Load more data for page " + page);
-                getNotifications(page);
+                Log.d(TAG, "Load more data");
+                getNotifications(mPageDto.getNextPage());
             }
         }
 
-    };
-    private boolean isLastItemDisplaying(RecyclerView recyclerView){
-        //check if the adapter item count is greater than 0
-        if(recyclerView.getAdapter().getItemCount() != 0){
-            //get the last visible item on screen using the layoutmanager
-            int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
-            //apply some logic here.
-            if(lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
-                return true;
+        private boolean isLastItemDisplaying(RecyclerView recyclerView) {
+            //check if the adapter item count is greater than 0
+            if (recyclerView.getAdapter().getItemCount() != 0) {
+                //get the last visible item on screen using the layoutmanager
+                int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                //apply some logic here.
+                if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1)
+                    return true;
+            }
+            return false;
         }
-        return  false;
-    }
+
+    };
+
 
     @Override
     protected void onPostResume() {

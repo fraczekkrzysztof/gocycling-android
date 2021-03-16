@@ -185,7 +185,7 @@ public class EventListActivity extends AppCompatActivity implements NavigationVi
                 String.format(getResources().getString(R.string.api_event_address), clubId);
         HttpUrl.Builder urlBuilder = HttpUrl.parse(request).newBuilder()
                 .addQueryParameter("page", String.valueOf(page))
-                .addQueryParameter("sort", "created,desc");
+                .addQueryParameter("sort", "created,asc");
         return new Request.Builder()
                 .url(urlBuilder.build().toString())
                 .build();
